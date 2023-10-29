@@ -1,18 +1,19 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
+import 'package:sputnikn_chat_client/model/response/base_response.dart';
 import 'package:sputnikn_chat_client/model/response/room_event_reaction_detail.dart';
-import 'base_response.dart';
 
 class RoomEventReactionResponse extends BaseResponse {
-  final RoomEventReactionDetail detail;
-
-  RoomEventReactionResponse({
+  const RoomEventReactionResponse({
     required this.detail,
   });
 
+  final RoomEventReactionDetail detail;
+
   static RoomEventReactionResponse fromProto(
-      Proto.RoomEventReactionReply proto) {
+    proto.RoomEventReactionReply data,
+  ) {
     return RoomEventReactionResponse(
-      detail: RoomEventReactionDetail.fromProto(proto.detail),
+      detail: RoomEventReactionDetail.fromProto(data.detail),
     );
   }
 }

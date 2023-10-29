@@ -1,6 +1,6 @@
-import 'package:sputnikn_chat_client/api/model/map_string_dynamic.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
+import 'package:sputnikn_chat_client/api/model/map_string_dynamic.dart';
 
 part 'api_client.g.dart';
 
@@ -8,7 +8,7 @@ part 'api_client.g.dart';
 abstract class ApiClient {
   factory ApiClient(Dio dio) => _ApiClient(dio);
 
-  static const _headerUser = "X-SPUTNIKN-USER";
+  static const _headerUser = 'X-SPUTNIKN-USER';
 
   @GET('/media/{mediaId}')
   @DioResponseType(ResponseType.bytes)

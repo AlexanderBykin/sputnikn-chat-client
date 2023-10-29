@@ -1,15 +1,15 @@
-import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
-import 'package:sputnikn_chat_client/model/request/base_request.dart';
 import 'package:protobuf/protobuf.dart';
+import 'package:sputnikn_chat_client/model/request/base_request.dart';
+import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
 
 class UploadMediaRequest extends BaseRequest {
-  final String userId;
-  final List<MediaContent> files;
-
-  UploadMediaRequest({
+  const UploadMediaRequest({
     required this.userId,
     required this.files,
   });
+
+  final String userId;
+  final List<MediaContent> files;
 
   @override
   GeneratedMessage toProto() {

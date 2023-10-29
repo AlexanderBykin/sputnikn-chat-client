@@ -1,15 +1,15 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
 
 class UserDetail {
-  final String userId;
-  final String fullName;
-  final String? avatar;
-
-  UserDetail({
+  const UserDetail({
     required this.userId,
     required this.fullName,
     required this.avatar,
   });
+
+  final String userId;
+  final String fullName;
+  final String? avatar;
 
   @override
   bool operator ==(Object other) =>
@@ -21,11 +21,11 @@ class UserDetail {
   @override
   int get hashCode => userId.hashCode;
 
-  static UserDetail fromProto(Proto.UserDetail proto) {
+  static UserDetail fromProto(proto.UserDetail data) {
     return UserDetail(
-      userId: proto.userId,
-      fullName: proto.fullName,
-      avatar: (proto.hasAvatar()) ? proto.avatar : null,
+      userId: data.userId,
+      fullName: data.fullName,
+      avatar: (data.hasAvatar()) ? data.avatar : null,
     );
   }
 }

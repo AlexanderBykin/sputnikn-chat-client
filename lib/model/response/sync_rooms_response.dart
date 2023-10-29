@@ -1,25 +1,23 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
+import 'package:sputnikn_chat_client/model/response/base_response.dart';
+import 'package:sputnikn_chat_client/model/response/room_event_message_detail.dart';
 import 'package:sputnikn_chat_client/model/response/room_event_system_detail.dart';
-import './room_event_message_detail.dart';
-import './base_response.dart';
 
 class SyncRoomsResponse extends BaseResponse {
-  final List<RoomEventMessageDetail> messageEvents;
-  final List<RoomEventSystemDetail> systemEvents;
-
-  SyncRoomsResponse({
+  const SyncRoomsResponse({
     required this.messageEvents,
     required this.systemEvents,
   });
 
-  static SyncRoomsResponse fromProto(Proto.SyncRoomsReply proto) {
+  final List<RoomEventMessageDetail> messageEvents;
+  final List<RoomEventSystemDetail> systemEvents;
+
+  static SyncRoomsResponse fromProto(proto.SyncRoomsReply data) {
     return SyncRoomsResponse(
-      messageEvents: proto.messageEvents
-          .map((e) => RoomEventMessageDetail.fromProto(e))
-          .toList(),
-      systemEvents: proto.systemEvents
-          .map((e) => RoomEventSystemDetail.fromProto(e))
-          .toList(),
+      messageEvents:
+          data.messageEvents.map(RoomEventMessageDetail.fromProto).toList(),
+      systemEvents:
+          data.systemEvents.map(RoomEventSystemDetail.fromProto).toList(),
     );
   }
 }

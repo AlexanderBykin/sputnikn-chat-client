@@ -1,14 +1,6 @@
-import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
-import 'package:sputnikn_chat_client/database/table/room.dart';
-import 'package:sputnikn_chat_client/database/table/room_event_message.dart';
-import 'package:sputnikn_chat_client/database/table/room_event_message_attachment.dart';
-import 'package:sputnikn_chat_client/database/table/room_event_message_reaction.dart';
-import 'package:sputnikn_chat_client/database/table/room_event_system.dart';
-import 'package:sputnikn_chat_client/database/table/room_member.dart';
-import 'package:sputnikn_chat_client/database/table/user_push.dart';
-import 'package:sputnikn_chat_client/database/table/users.dart';
-import 'package:drift/backends.dart';
 import 'package:drift/drift.dart';
+import 'package:sputnikn_chat_client/database/table/tables.dart';
+import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
 
 part 'chat_database.g.dart';
 
@@ -21,20 +13,18 @@ part 'chat_database.g.dart';
     RoomEventSystem,
     RoomMember,
     User,
-    UserPush
+    UserPush,
   ],
   queries: {
     'lastGeneratedEventMessageId':
-        'select max(client_event_id) from room_event_message where user_id=:userId;'
+        'select max(client_event_id) from room_event_message where user_id=:userId;',
   },
 )
 class ChatDatabase extends _$ChatDatabase {
-  ChatDatabase(DelegatedDatabase delegate) : super(delegate);
+  ChatDatabase(super.delegate);
 
   @override
   int get schemaVersion => 1;
-
-  //#region User Methods
 
   Future<List<RoomData>> getUserRooms(
     String userId,
@@ -42,10 +32,14 @@ class ChatDatabase extends _$ChatDatabase {
   ) async {
     final query = select(room).join([
       innerJoin(roomMember, roomMember.roomId.equalsExp(room.id)),
-      innerJoin(user, roomMember.userId.equalsExp(user.id))
+      innerJoin(user, roomMember.userId.equalsExp(user.id)),
     ])
-      ..where(user.id.equals(userId) &
-          (roomIds.isNotEmpty ? room.id.isIn(roomIds) : Variable(1).equals(1)));
+      ..where(
+        user.id.equals(userId) &
+            (roomIds.isNotEmpty
+                ? room.id.isIn(roomIds)
+                : const Variable(1).equals(1)),
+      );
     return query.get().then((value) {
       return value.map((e) => e.readTable<Room, RoomData>(room)).toList();
     });
@@ -78,10 +72,11 @@ class ChatDatabase extends _$ChatDatabase {
         title: room.title,
         avatar: room.avatar,
         members: roomMembers
-            .where((roomMember) => usersByRooms.any((user) {
-                  return roomMember.roomId == room.id &&
-                      roomMember.userId == user.id;
-                }))
+            .where(
+          (roomMember) => usersByRooms.any((user) {
+            return roomMember.roomId == room.id && roomMember.userId == user.id;
+          }),
+        )
             .map((roomMember) {
           final user =
               usersByRooms.firstWhere((user) => user.id == roomMember.userId);
@@ -111,10 +106,6 @@ class ChatDatabase extends _$ChatDatabase {
     });
   }
 
-  //#endregion
-
-  //#region Room methods
-
   Future<int> upsertRoom(RoomData data) {
     return into(room).insertOnConflictUpdate(data);
   }
@@ -128,10 +119,6 @@ class ChatDatabase extends _$ChatDatabase {
   Future<int> deleteRoom(RoomData data) {
     return (delete(room)..where((t) => t.id.equals(data.id))).go();
   }
-
-  //#endregion
-
-  //#region RoomMember Methods
 
   Future<List<RoomMemberData>> getRoomMembersByRooms(Set<String> roomIds) {
     final query = select(roomMember).join([
@@ -162,10 +149,6 @@ class ChatDatabase extends _$ChatDatabase {
         .go();
   }
 
-  //#endregion
-
-  //#region RoomEventMessage Methods
-
   Future<int> upsertEventMessage(RoomEventMessageData data) {
     return into(roomEventMessage).insertOnConflictUpdate(data);
   }
@@ -186,15 +169,9 @@ class ChatDatabase extends _$ChatDatabase {
         .then((value) => (value ?? 0) + 1);
   }
 
-  //#endregion
-
-  //#region RoomEventSystem
-
   Future<void> upsertEventSystems(List<RoomEventSystemData> data) {
     return batch((batch) {
       return batch.insertAllOnConflictUpdate(roomEventSystem, data);
     });
   }
-
-  //#endregion
 }

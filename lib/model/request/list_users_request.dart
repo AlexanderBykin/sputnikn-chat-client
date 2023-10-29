@@ -1,9 +1,9 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart';
-import './base_request.dart';
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
+import 'package:sputnikn_chat_client/model/request/base_request.dart';
 
-class ListUsersRequest extends BaseRequest<ListUsers> {
+class ListUsersRequest extends BaseRequest<proto.ListUsers> {
   @override
-  ListUsers toProto() {
-    return ListUsers();
+  proto.ListUsers toProto() {
+    return proto.ListUsers();
   }
 }

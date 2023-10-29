@@ -1,6 +1,6 @@
-import 'package:sputnikn_chat_client/database/chat_database.dart';
-import 'package:sputnikn_chat_client/database/table/room_member.dart';
 import 'package:drift/native.dart';
+import 'package:sputnikn_chat_client/database/chat_database.dart';
+import 'package:sputnikn_chat_client/database/table/tables.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -14,30 +14,30 @@ void main() {
     db?.close();
   });
 
-  test("check getUserRoomsAsRoomDetail return correct result", () async {
+  test('check getUserRoomsAsRoomDetail return correct result', () async {
     final user1 = UserData(
-      id: "user1",
-      fullName: "user1",
+      id: 'user1',
+      fullName: 'user1',
       dateCreate: DateTime.now(),
     );
     final user2 = UserData(
-      id: "user2",
-      fullName: "user2",
+      id: 'user2',
+      fullName: 'user2',
       dateCreate: DateTime.now(),
     );
     final user3 = UserData(
-      id: "user3",
-      fullName: "user3",
+      id: 'user3',
+      fullName: 'user3',
       dateCreate: DateTime.now(),
     );
     final room1 = RoomData(
-      id: "room1",
-      title: "room1",
+      id: 'room1',
+      title: 'room1',
       dateCreate: DateTime.now(),
     );
     final room2 = RoomData(
-      id: "room2",
-      title: "room2",
+      id: 'room2',
+      title: 'room2',
       dateCreate: DateTime.now(),
     );
     final roomMembers = [
@@ -84,17 +84,13 @@ void main() {
     expect(result3.length, 1);
     expect(result1[0].roomId, room1.id);
     expect(
-        result1[0].members.length,
-        roomMembers
-            .where((e) => e.roomId == room1.id)
-        .toList()
-            .length);
+      result1[0].members.length,
+      roomMembers.where((e) => e.roomId == room1.id).toList().length,
+    );
     expect(result1[1].roomId, room2.id);
     expect(
-        result1[1].members.length,
-        roomMembers
-            .where((e) => e.roomId == room2.id)
-            .toList()
-            .length);
+      result1[1].members.length,
+      roomMembers.where((e) => e.roomId == room2.id).toList().length,
+    );
   });
 }

@@ -2,49 +2,132 @@
 
 part of 'chat_database.dart';
 
-// **************************************************************************
-// MoorGenerator
-// **************************************************************************
+// ignore_for_file: type=lint
+class $RoomTable extends Room with TableInfo<$RoomTable, RoomData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RoomTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _avatarMeta = const VerificationMeta('avatar');
+  @override
+  late final GeneratedColumn<String> avatar = GeneratedColumn<String>(
+      'avatar', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _dateCreateMeta =
+      const VerificationMeta('dateCreate');
+  @override
+  late final GeneratedColumn<DateTime> dateCreate = GeneratedColumn<DateTime>(
+      'date_create', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _dateUpdateMeta =
+      const VerificationMeta('dateUpdate');
+  @override
+  late final GeneratedColumn<DateTime> dateUpdate = GeneratedColumn<DateTime>(
+      'date_update', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, title, avatar, dateCreate, dateUpdate];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'room';
+  @override
+  VerificationContext validateIntegrity(Insertable<RoomData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('avatar')) {
+      context.handle(_avatarMeta,
+          avatar.isAcceptableOrUnknown(data['avatar']!, _avatarMeta));
+    }
+    if (data.containsKey('date_create')) {
+      context.handle(
+          _dateCreateMeta,
+          dateCreate.isAcceptableOrUnknown(
+              data['date_create']!, _dateCreateMeta));
+    } else if (isInserting) {
+      context.missing(_dateCreateMeta);
+    }
+    if (data.containsKey('date_update')) {
+      context.handle(
+          _dateUpdateMeta,
+          dateUpdate.isAcceptableOrUnknown(
+              data['date_update']!, _dateUpdateMeta));
+    }
+    return context;
+  }
 
-// ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RoomData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RoomData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      avatar: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}avatar']),
+      dateCreate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_create'])!,
+      dateUpdate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_update']),
+    );
+  }
+
+  @override
+  $RoomTable createAlias(String alias) {
+    return $RoomTable(attachedDatabase, alias);
+  }
+}
+
 class RoomData extends DataClass implements Insertable<RoomData> {
   final String id;
   final String title;
   final String? avatar;
   final DateTime dateCreate;
   final DateTime? dateUpdate;
-  RoomData(
+  const RoomData(
       {required this.id,
       required this.title,
       this.avatar,
       required this.dateCreate,
       this.dateUpdate});
-  factory RoomData.fromData(Map<String, dynamic> data, {String? prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return RoomData(
-      id: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
-      title: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}title'])!,
-      avatar: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}avatar']),
-      dateCreate: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_create'])!,
-      dateUpdate: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_update']),
-    );
-  }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['title'] = Variable<String>(title);
     if (!nullToAbsent || avatar != null) {
-      map['avatar'] = Variable<String?>(avatar);
+      map['avatar'] = Variable<String>(avatar);
     }
     map['date_create'] = Variable<DateTime>(dateCreate);
     if (!nullToAbsent || dateUpdate != null) {
-      map['date_update'] = Variable<DateTime?>(dateUpdate);
+      map['date_update'] = Variable<DateTime>(dateUpdate);
     }
     return map;
   }
@@ -88,15 +171,15 @@ class RoomData extends DataClass implements Insertable<RoomData> {
   RoomData copyWith(
           {String? id,
           String? title,
-          String? avatar,
+          Value<String?> avatar = const Value.absent(),
           DateTime? dateCreate,
-          DateTime? dateUpdate}) =>
+          Value<DateTime?> dateUpdate = const Value.absent()}) =>
       RoomData(
         id: id ?? this.id,
         title: title ?? this.title,
-        avatar: avatar ?? this.avatar,
+        avatar: avatar.present ? avatar.value : this.avatar,
         dateCreate: dateCreate ?? this.dateCreate,
-        dateUpdate: dateUpdate ?? this.dateUpdate,
+        dateUpdate: dateUpdate.present ? dateUpdate.value : this.dateUpdate,
       );
   @override
   String toString() {
@@ -129,12 +212,14 @@ class RoomCompanion extends UpdateCompanion<RoomData> {
   final Value<String?> avatar;
   final Value<DateTime> dateCreate;
   final Value<DateTime?> dateUpdate;
+  final Value<int> rowid;
   const RoomCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
     this.avatar = const Value.absent(),
     this.dateCreate = const Value.absent(),
     this.dateUpdate = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RoomCompanion.insert({
     required String id,
@@ -142,15 +227,17 @@ class RoomCompanion extends UpdateCompanion<RoomData> {
     this.avatar = const Value.absent(),
     required DateTime dateCreate,
     this.dateUpdate = const Value.absent(),
+    this.rowid = const Value.absent(),
   })  : id = Value(id),
         title = Value(title),
         dateCreate = Value(dateCreate);
   static Insertable<RoomData> custom({
     Expression<String>? id,
     Expression<String>? title,
-    Expression<String?>? avatar,
+    Expression<String>? avatar,
     Expression<DateTime>? dateCreate,
-    Expression<DateTime?>? dateUpdate,
+    Expression<DateTime>? dateUpdate,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -158,6 +245,7 @@ class RoomCompanion extends UpdateCompanion<RoomData> {
       if (avatar != null) 'avatar': avatar,
       if (dateCreate != null) 'date_create': dateCreate,
       if (dateUpdate != null) 'date_update': dateUpdate,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
@@ -166,13 +254,15 @@ class RoomCompanion extends UpdateCompanion<RoomData> {
       Value<String>? title,
       Value<String?>? avatar,
       Value<DateTime>? dateCreate,
-      Value<DateTime?>? dateUpdate}) {
+      Value<DateTime?>? dateUpdate,
+      Value<int>? rowid}) {
     return RoomCompanion(
       id: id ?? this.id,
       title: title ?? this.title,
       avatar: avatar ?? this.avatar,
       dateCreate: dateCreate ?? this.dateCreate,
       dateUpdate: dateUpdate ?? this.dateUpdate,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -186,13 +276,16 @@ class RoomCompanion extends UpdateCompanion<RoomData> {
       map['title'] = Variable<String>(title.value);
     }
     if (avatar.present) {
-      map['avatar'] = Variable<String?>(avatar.value);
+      map['avatar'] = Variable<String>(avatar.value);
     }
     if (dateCreate.present) {
       map['date_create'] = Variable<DateTime>(dateCreate.value);
     }
     if (dateUpdate.present) {
-      map['date_update'] = Variable<DateTime?>(dateUpdate.value);
+      map['date_update'] = Variable<DateTime>(dateUpdate.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -204,45 +297,67 @@ class RoomCompanion extends UpdateCompanion<RoomData> {
           ..write('title: $title, ')
           ..write('avatar: $avatar, ')
           ..write('dateCreate: $dateCreate, ')
-          ..write('dateUpdate: $dateUpdate')
+          ..write('dateUpdate: $dateUpdate, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $RoomTable extends Room with TableInfo<$RoomTable, RoomData> {
-  final GeneratedDatabase _db;
+class $UserTable extends User with TableInfo<$UserTable, UserData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $RoomTable(this._db, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  late final GeneratedColumn<String?> id = GeneratedColumn<String?>(
+  $UserTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _titleMeta = const VerificationMeta('title');
-  late final GeneratedColumn<String?> title = GeneratedColumn<String?>(
-      'title', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _avatarMeta = const VerificationMeta('avatar');
-  late final GeneratedColumn<String?> avatar = GeneratedColumn<String?>(
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _loginMeta = const VerificationMeta('login');
+  @override
+  late final GeneratedColumn<String> login = GeneratedColumn<String>(
+      'login', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _passwordMeta =
+      const VerificationMeta('password');
+  @override
+  late final GeneratedColumn<String> password = GeneratedColumn<String>(
+      'password', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _fullNameMeta =
+      const VerificationMeta('fullName');
+  @override
+  late final GeneratedColumn<String> fullName = GeneratedColumn<String>(
+      'full_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _avatarMeta = const VerificationMeta('avatar');
+  @override
+  late final GeneratedColumn<String> avatar = GeneratedColumn<String>(
       'avatar', aliasedName, true,
-      typeName: 'TEXT', requiredDuringInsert: false);
-  final VerificationMeta _dateCreateMeta = const VerificationMeta('dateCreate');
-  late final GeneratedColumn<DateTime?> dateCreate = GeneratedColumn<DateTime?>(
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _dateCreateMeta =
+      const VerificationMeta('dateCreate');
+  @override
+  late final GeneratedColumn<DateTime> dateCreate = GeneratedColumn<DateTime>(
       'date_create', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
-  final VerificationMeta _dateUpdateMeta = const VerificationMeta('dateUpdate');
-  late final GeneratedColumn<DateTime?> dateUpdate = GeneratedColumn<DateTime?>(
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _dateUpdateMeta =
+      const VerificationMeta('dateUpdate');
+  @override
+  late final GeneratedColumn<DateTime> dateUpdate = GeneratedColumn<DateTime>(
       'date_update', aliasedName, true,
-      typeName: 'INTEGER', requiredDuringInsert: false);
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, title, avatar, dateCreate, dateUpdate];
+      [id, login, password, fullName, avatar, dateCreate, dateUpdate];
   @override
-  String get aliasedName => _alias ?? 'room';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'room';
+  String get actualTableName => $name;
+  static const String $name = 'user';
   @override
-  VerificationContext validateIntegrity(Insertable<RoomData> instance,
+  VerificationContext validateIntegrity(Insertable<UserData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -251,11 +366,19 @@ class $RoomTable extends Room with TableInfo<$RoomTable, RoomData> {
     } else if (isInserting) {
       context.missing(_idMeta);
     }
-    if (data.containsKey('title')) {
+    if (data.containsKey('login')) {
       context.handle(
-          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+          _loginMeta, login.isAcceptableOrUnknown(data['login']!, _loginMeta));
+    }
+    if (data.containsKey('password')) {
+      context.handle(_passwordMeta,
+          password.isAcceptableOrUnknown(data['password']!, _passwordMeta));
+    }
+    if (data.containsKey('full_name')) {
+      context.handle(_fullNameMeta,
+          fullName.isAcceptableOrUnknown(data['full_name']!, _fullNameMeta));
     } else if (isInserting) {
-      context.missing(_titleMeta);
+      context.missing(_fullNameMeta);
     }
     if (data.containsKey('avatar')) {
       context.handle(_avatarMeta,
@@ -281,101 +404,98 @@ class $RoomTable extends Room with TableInfo<$RoomTable, RoomData> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  RoomData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return RoomData.fromData(data,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  UserData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      login: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}login']),
+      password: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}password']),
+      fullName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}full_name'])!,
+      avatar: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}avatar']),
+      dateCreate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_create'])!,
+      dateUpdate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_update']),
+    );
   }
 
   @override
-  $RoomTable createAlias(String alias) {
-    return $RoomTable(_db, alias);
+  $UserTable createAlias(String alias) {
+    return $UserTable(attachedDatabase, alias);
   }
 }
 
-class RoomEventMessageData extends DataClass
-    implements Insertable<RoomEventMessageData> {
+class UserData extends DataClass implements Insertable<UserData> {
   final String id;
-  final String roomId;
-  final String userId;
-  final String content;
-  final int version;
-  final int? clientEventId;
+  final String? login;
+  final String? password;
+  final String fullName;
+  final String? avatar;
   final DateTime dateCreate;
-  final DateTime dateEdit;
-  RoomEventMessageData(
+  final DateTime? dateUpdate;
+  const UserData(
       {required this.id,
-      required this.roomId,
-      required this.userId,
-      required this.content,
-      required this.version,
-      this.clientEventId,
+      this.login,
+      this.password,
+      required this.fullName,
+      this.avatar,
       required this.dateCreate,
-      required this.dateEdit});
-  factory RoomEventMessageData.fromData(Map<String, dynamic> data,
-      {String? prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return RoomEventMessageData(
-      id: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
-      roomId: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}room_id'])!,
-      userId: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}user_id'])!,
-      content: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}content'])!,
-      version: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}version'])!,
-      clientEventId: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}client_event_id']),
-      dateCreate: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_create'])!,
-      dateEdit: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_edit'])!,
-    );
-  }
+      this.dateUpdate});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['room_id'] = Variable<String>(roomId);
-    map['user_id'] = Variable<String>(userId);
-    map['content'] = Variable<String>(content);
-    map['version'] = Variable<int>(version);
-    if (!nullToAbsent || clientEventId != null) {
-      map['client_event_id'] = Variable<int?>(clientEventId);
+    if (!nullToAbsent || login != null) {
+      map['login'] = Variable<String>(login);
+    }
+    if (!nullToAbsent || password != null) {
+      map['password'] = Variable<String>(password);
+    }
+    map['full_name'] = Variable<String>(fullName);
+    if (!nullToAbsent || avatar != null) {
+      map['avatar'] = Variable<String>(avatar);
     }
     map['date_create'] = Variable<DateTime>(dateCreate);
-    map['date_edit'] = Variable<DateTime>(dateEdit);
+    if (!nullToAbsent || dateUpdate != null) {
+      map['date_update'] = Variable<DateTime>(dateUpdate);
+    }
     return map;
   }
 
-  RoomEventMessageCompanion toCompanion(bool nullToAbsent) {
-    return RoomEventMessageCompanion(
+  UserCompanion toCompanion(bool nullToAbsent) {
+    return UserCompanion(
       id: Value(id),
-      roomId: Value(roomId),
-      userId: Value(userId),
-      content: Value(content),
-      version: Value(version),
-      clientEventId: clientEventId == null && nullToAbsent
+      login:
+          login == null && nullToAbsent ? const Value.absent() : Value(login),
+      password: password == null && nullToAbsent
           ? const Value.absent()
-          : Value(clientEventId),
+          : Value(password),
+      fullName: Value(fullName),
+      avatar:
+          avatar == null && nullToAbsent ? const Value.absent() : Value(avatar),
       dateCreate: Value(dateCreate),
-      dateEdit: Value(dateEdit),
+      dateUpdate: dateUpdate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dateUpdate),
     );
   }
 
-  factory RoomEventMessageData.fromJson(Map<String, dynamic> json,
+  factory UserData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return RoomEventMessageData(
+    return UserData(
       id: serializer.fromJson<String>(json['id']),
-      roomId: serializer.fromJson<String>(json['roomId']),
-      userId: serializer.fromJson<String>(json['userId']),
-      content: serializer.fromJson<String>(json['content']),
-      version: serializer.fromJson<int>(json['version']),
-      clientEventId: serializer.fromJson<int?>(json['clientEventId']),
+      login: serializer.fromJson<String?>(json['login']),
+      password: serializer.fromJson<String?>(json['password']),
+      fullName: serializer.fromJson<String>(json['fullName']),
+      avatar: serializer.fromJson<String?>(json['avatar']),
       dateCreate: serializer.fromJson<DateTime>(json['dateCreate']),
-      dateEdit: serializer.fromJson<DateTime>(json['dateEdit']),
+      dateUpdate: serializer.fromJson<DateTime?>(json['dateUpdate']),
     );
   }
   @override
@@ -383,142 +503,133 @@ class RoomEventMessageData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'roomId': serializer.toJson<String>(roomId),
-      'userId': serializer.toJson<String>(userId),
-      'content': serializer.toJson<String>(content),
-      'version': serializer.toJson<int>(version),
-      'clientEventId': serializer.toJson<int?>(clientEventId),
+      'login': serializer.toJson<String?>(login),
+      'password': serializer.toJson<String?>(password),
+      'fullName': serializer.toJson<String>(fullName),
+      'avatar': serializer.toJson<String?>(avatar),
       'dateCreate': serializer.toJson<DateTime>(dateCreate),
-      'dateEdit': serializer.toJson<DateTime>(dateEdit),
+      'dateUpdate': serializer.toJson<DateTime?>(dateUpdate),
     };
   }
 
-  RoomEventMessageData copyWith(
+  UserData copyWith(
           {String? id,
-          String? roomId,
-          String? userId,
-          String? content,
-          int? version,
-          int? clientEventId,
+          Value<String?> login = const Value.absent(),
+          Value<String?> password = const Value.absent(),
+          String? fullName,
+          Value<String?> avatar = const Value.absent(),
           DateTime? dateCreate,
-          DateTime? dateEdit}) =>
-      RoomEventMessageData(
+          Value<DateTime?> dateUpdate = const Value.absent()}) =>
+      UserData(
         id: id ?? this.id,
-        roomId: roomId ?? this.roomId,
-        userId: userId ?? this.userId,
-        content: content ?? this.content,
-        version: version ?? this.version,
-        clientEventId: clientEventId ?? this.clientEventId,
+        login: login.present ? login.value : this.login,
+        password: password.present ? password.value : this.password,
+        fullName: fullName ?? this.fullName,
+        avatar: avatar.present ? avatar.value : this.avatar,
         dateCreate: dateCreate ?? this.dateCreate,
-        dateEdit: dateEdit ?? this.dateEdit,
+        dateUpdate: dateUpdate.present ? dateUpdate.value : this.dateUpdate,
       );
   @override
   String toString() {
-    return (StringBuffer('RoomEventMessageData(')
+    return (StringBuffer('UserData(')
           ..write('id: $id, ')
-          ..write('roomId: $roomId, ')
-          ..write('userId: $userId, ')
-          ..write('content: $content, ')
-          ..write('version: $version, ')
-          ..write('clientEventId: $clientEventId, ')
+          ..write('login: $login, ')
+          ..write('password: $password, ')
+          ..write('fullName: $fullName, ')
+          ..write('avatar: $avatar, ')
           ..write('dateCreate: $dateCreate, ')
-          ..write('dateEdit: $dateEdit')
+          ..write('dateUpdate: $dateUpdate')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, roomId, userId, content, version,
-      clientEventId, dateCreate, dateEdit);
+  int get hashCode => Object.hash(
+      id, login, password, fullName, avatar, dateCreate, dateUpdate);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is RoomEventMessageData &&
+      (other is UserData &&
           other.id == this.id &&
-          other.roomId == this.roomId &&
-          other.userId == this.userId &&
-          other.content == this.content &&
-          other.version == this.version &&
-          other.clientEventId == this.clientEventId &&
+          other.login == this.login &&
+          other.password == this.password &&
+          other.fullName == this.fullName &&
+          other.avatar == this.avatar &&
           other.dateCreate == this.dateCreate &&
-          other.dateEdit == this.dateEdit);
+          other.dateUpdate == this.dateUpdate);
 }
 
-class RoomEventMessageCompanion extends UpdateCompanion<RoomEventMessageData> {
+class UserCompanion extends UpdateCompanion<UserData> {
   final Value<String> id;
-  final Value<String> roomId;
-  final Value<String> userId;
-  final Value<String> content;
-  final Value<int> version;
-  final Value<int?> clientEventId;
+  final Value<String?> login;
+  final Value<String?> password;
+  final Value<String> fullName;
+  final Value<String?> avatar;
   final Value<DateTime> dateCreate;
-  final Value<DateTime> dateEdit;
-  const RoomEventMessageCompanion({
+  final Value<DateTime?> dateUpdate;
+  final Value<int> rowid;
+  const UserCompanion({
     this.id = const Value.absent(),
-    this.roomId = const Value.absent(),
-    this.userId = const Value.absent(),
-    this.content = const Value.absent(),
-    this.version = const Value.absent(),
-    this.clientEventId = const Value.absent(),
+    this.login = const Value.absent(),
+    this.password = const Value.absent(),
+    this.fullName = const Value.absent(),
+    this.avatar = const Value.absent(),
     this.dateCreate = const Value.absent(),
-    this.dateEdit = const Value.absent(),
+    this.dateUpdate = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
-  RoomEventMessageCompanion.insert({
+  UserCompanion.insert({
     required String id,
-    required String roomId,
-    required String userId,
-    required String content,
-    required int version,
-    this.clientEventId = const Value.absent(),
+    this.login = const Value.absent(),
+    this.password = const Value.absent(),
+    required String fullName,
+    this.avatar = const Value.absent(),
     required DateTime dateCreate,
-    required DateTime dateEdit,
+    this.dateUpdate = const Value.absent(),
+    this.rowid = const Value.absent(),
   })  : id = Value(id),
-        roomId = Value(roomId),
-        userId = Value(userId),
-        content = Value(content),
-        version = Value(version),
-        dateCreate = Value(dateCreate),
-        dateEdit = Value(dateEdit);
-  static Insertable<RoomEventMessageData> custom({
+        fullName = Value(fullName),
+        dateCreate = Value(dateCreate);
+  static Insertable<UserData> custom({
     Expression<String>? id,
-    Expression<String>? roomId,
-    Expression<String>? userId,
-    Expression<String>? content,
-    Expression<int>? version,
-    Expression<int?>? clientEventId,
+    Expression<String>? login,
+    Expression<String>? password,
+    Expression<String>? fullName,
+    Expression<String>? avatar,
     Expression<DateTime>? dateCreate,
-    Expression<DateTime>? dateEdit,
+    Expression<DateTime>? dateUpdate,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (roomId != null) 'room_id': roomId,
-      if (userId != null) 'user_id': userId,
-      if (content != null) 'content': content,
-      if (version != null) 'version': version,
-      if (clientEventId != null) 'client_event_id': clientEventId,
+      if (login != null) 'login': login,
+      if (password != null) 'password': password,
+      if (fullName != null) 'full_name': fullName,
+      if (avatar != null) 'avatar': avatar,
       if (dateCreate != null) 'date_create': dateCreate,
-      if (dateEdit != null) 'date_edit': dateEdit,
+      if (dateUpdate != null) 'date_update': dateUpdate,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
-  RoomEventMessageCompanion copyWith(
+  UserCompanion copyWith(
       {Value<String>? id,
-      Value<String>? roomId,
-      Value<String>? userId,
-      Value<String>? content,
-      Value<int>? version,
-      Value<int?>? clientEventId,
+      Value<String?>? login,
+      Value<String?>? password,
+      Value<String>? fullName,
+      Value<String?>? avatar,
       Value<DateTime>? dateCreate,
-      Value<DateTime>? dateEdit}) {
-    return RoomEventMessageCompanion(
+      Value<DateTime?>? dateUpdate,
+      Value<int>? rowid}) {
+    return UserCompanion(
       id: id ?? this.id,
-      roomId: roomId ?? this.roomId,
-      userId: userId ?? this.userId,
-      content: content ?? this.content,
-      version: version ?? this.version,
-      clientEventId: clientEventId ?? this.clientEventId,
+      login: login ?? this.login,
+      password: password ?? this.password,
+      fullName: fullName ?? this.fullName,
+      avatar: avatar ?? this.avatar,
       dateCreate: dateCreate ?? this.dateCreate,
-      dateEdit: dateEdit ?? this.dateEdit,
+      dateUpdate: dateUpdate ?? this.dateUpdate,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -528,41 +639,41 @@ class RoomEventMessageCompanion extends UpdateCompanion<RoomEventMessageData> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (roomId.present) {
-      map['room_id'] = Variable<String>(roomId.value);
+    if (login.present) {
+      map['login'] = Variable<String>(login.value);
     }
-    if (userId.present) {
-      map['user_id'] = Variable<String>(userId.value);
+    if (password.present) {
+      map['password'] = Variable<String>(password.value);
     }
-    if (content.present) {
-      map['content'] = Variable<String>(content.value);
+    if (fullName.present) {
+      map['full_name'] = Variable<String>(fullName.value);
     }
-    if (version.present) {
-      map['version'] = Variable<int>(version.value);
-    }
-    if (clientEventId.present) {
-      map['client_event_id'] = Variable<int?>(clientEventId.value);
+    if (avatar.present) {
+      map['avatar'] = Variable<String>(avatar.value);
     }
     if (dateCreate.present) {
       map['date_create'] = Variable<DateTime>(dateCreate.value);
     }
-    if (dateEdit.present) {
-      map['date_edit'] = Variable<DateTime>(dateEdit.value);
+    if (dateUpdate.present) {
+      map['date_update'] = Variable<DateTime>(dateUpdate.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
 
   @override
   String toString() {
-    return (StringBuffer('RoomEventMessageCompanion(')
+    return (StringBuffer('UserCompanion(')
           ..write('id: $id, ')
-          ..write('roomId: $roomId, ')
-          ..write('userId: $userId, ')
-          ..write('content: $content, ')
-          ..write('version: $version, ')
-          ..write('clientEventId: $clientEventId, ')
+          ..write('login: $login, ')
+          ..write('password: $password, ')
+          ..write('fullName: $fullName, ')
+          ..write('avatar: $avatar, ')
           ..write('dateCreate: $dateCreate, ')
-          ..write('dateEdit: $dateEdit')
+          ..write('dateUpdate: $dateUpdate, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -570,42 +681,61 @@ class RoomEventMessageCompanion extends UpdateCompanion<RoomEventMessageData> {
 
 class $RoomEventMessageTable extends RoomEventMessage
     with TableInfo<$RoomEventMessageTable, RoomEventMessageData> {
-  final GeneratedDatabase _db;
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $RoomEventMessageTable(this._db, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  late final GeneratedColumn<String?> id = GeneratedColumn<String?>(
+  $RoomEventMessageTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _roomIdMeta = const VerificationMeta('roomId');
-  late final GeneratedColumn<String?> roomId = GeneratedColumn<String?>(
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _roomIdMeta = const VerificationMeta('roomId');
+  @override
+  late final GeneratedColumn<String> roomId = GeneratedColumn<String>(
       'room_id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _userIdMeta = const VerificationMeta('userId');
-  late final GeneratedColumn<String?> userId = GeneratedColumn<String?>(
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES room (id)'));
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
       'user_id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _contentMeta = const VerificationMeta('content');
-  late final GeneratedColumn<String?> content = GeneratedColumn<String?>(
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES user (id)'));
+  static const VerificationMeta _contentMeta =
+      const VerificationMeta('content');
+  @override
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
       'content', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _versionMeta = const VerificationMeta('version');
-  late final GeneratedColumn<int?> version = GeneratedColumn<int?>(
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _versionMeta =
+      const VerificationMeta('version');
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
       'version', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
-  final VerificationMeta _clientEventIdMeta =
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _clientEventIdMeta =
       const VerificationMeta('clientEventId');
-  late final GeneratedColumn<int?> clientEventId = GeneratedColumn<int?>(
+  @override
+  late final GeneratedColumn<int> clientEventId = GeneratedColumn<int>(
       'client_event_id', aliasedName, true,
-      typeName: 'INTEGER', requiredDuringInsert: false);
-  final VerificationMeta _dateCreateMeta = const VerificationMeta('dateCreate');
-  late final GeneratedColumn<DateTime?> dateCreate = GeneratedColumn<DateTime?>(
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _dateCreateMeta =
+      const VerificationMeta('dateCreate');
+  @override
+  late final GeneratedColumn<DateTime> dateCreate = GeneratedColumn<DateTime>(
       'date_create', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
-  final VerificationMeta _dateEditMeta = const VerificationMeta('dateEdit');
-  late final GeneratedColumn<DateTime?> dateEdit = GeneratedColumn<DateTime?>(
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _dateEditMeta =
+      const VerificationMeta('dateEdit');
+  @override
+  late final GeneratedColumn<DateTime> dateEdit = GeneratedColumn<DateTime>(
       'date_edit', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -618,9 +748,10 @@ class $RoomEventMessageTable extends RoomEventMessage
         dateEdit
       ];
   @override
-  String get aliasedName => _alias ?? 'room_event_message';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'room_event_message';
+  String get actualTableName => $name;
+  static const String $name = 'room_event_message';
   @override
   VerificationContext validateIntegrity(
       Insertable<RoomEventMessageData> instance,
@@ -683,13 +814,418 @@ class $RoomEventMessageTable extends RoomEventMessage
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   RoomEventMessageData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return RoomEventMessageData.fromData(data,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RoomEventMessageData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      roomId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}room_id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      content: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}content'])!,
+      version: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
+      clientEventId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}client_event_id']),
+      dateCreate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_create'])!,
+      dateEdit: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_edit'])!,
+    );
   }
 
   @override
   $RoomEventMessageTable createAlias(String alias) {
-    return $RoomEventMessageTable(_db, alias);
+    return $RoomEventMessageTable(attachedDatabase, alias);
+  }
+}
+
+class RoomEventMessageData extends DataClass
+    implements Insertable<RoomEventMessageData> {
+  final String id;
+  final String roomId;
+  final String userId;
+  final String content;
+  final int version;
+  final int? clientEventId;
+  final DateTime dateCreate;
+  final DateTime dateEdit;
+  const RoomEventMessageData(
+      {required this.id,
+      required this.roomId,
+      required this.userId,
+      required this.content,
+      required this.version,
+      this.clientEventId,
+      required this.dateCreate,
+      required this.dateEdit});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['room_id'] = Variable<String>(roomId);
+    map['user_id'] = Variable<String>(userId);
+    map['content'] = Variable<String>(content);
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || clientEventId != null) {
+      map['client_event_id'] = Variable<int>(clientEventId);
+    }
+    map['date_create'] = Variable<DateTime>(dateCreate);
+    map['date_edit'] = Variable<DateTime>(dateEdit);
+    return map;
+  }
+
+  RoomEventMessageCompanion toCompanion(bool nullToAbsent) {
+    return RoomEventMessageCompanion(
+      id: Value(id),
+      roomId: Value(roomId),
+      userId: Value(userId),
+      content: Value(content),
+      version: Value(version),
+      clientEventId: clientEventId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(clientEventId),
+      dateCreate: Value(dateCreate),
+      dateEdit: Value(dateEdit),
+    );
+  }
+
+  factory RoomEventMessageData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RoomEventMessageData(
+      id: serializer.fromJson<String>(json['id']),
+      roomId: serializer.fromJson<String>(json['roomId']),
+      userId: serializer.fromJson<String>(json['userId']),
+      content: serializer.fromJson<String>(json['content']),
+      version: serializer.fromJson<int>(json['version']),
+      clientEventId: serializer.fromJson<int?>(json['clientEventId']),
+      dateCreate: serializer.fromJson<DateTime>(json['dateCreate']),
+      dateEdit: serializer.fromJson<DateTime>(json['dateEdit']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'roomId': serializer.toJson<String>(roomId),
+      'userId': serializer.toJson<String>(userId),
+      'content': serializer.toJson<String>(content),
+      'version': serializer.toJson<int>(version),
+      'clientEventId': serializer.toJson<int?>(clientEventId),
+      'dateCreate': serializer.toJson<DateTime>(dateCreate),
+      'dateEdit': serializer.toJson<DateTime>(dateEdit),
+    };
+  }
+
+  RoomEventMessageData copyWith(
+          {String? id,
+          String? roomId,
+          String? userId,
+          String? content,
+          int? version,
+          Value<int?> clientEventId = const Value.absent(),
+          DateTime? dateCreate,
+          DateTime? dateEdit}) =>
+      RoomEventMessageData(
+        id: id ?? this.id,
+        roomId: roomId ?? this.roomId,
+        userId: userId ?? this.userId,
+        content: content ?? this.content,
+        version: version ?? this.version,
+        clientEventId:
+            clientEventId.present ? clientEventId.value : this.clientEventId,
+        dateCreate: dateCreate ?? this.dateCreate,
+        dateEdit: dateEdit ?? this.dateEdit,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('RoomEventMessageData(')
+          ..write('id: $id, ')
+          ..write('roomId: $roomId, ')
+          ..write('userId: $userId, ')
+          ..write('content: $content, ')
+          ..write('version: $version, ')
+          ..write('clientEventId: $clientEventId, ')
+          ..write('dateCreate: $dateCreate, ')
+          ..write('dateEdit: $dateEdit')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, roomId, userId, content, version,
+      clientEventId, dateCreate, dateEdit);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RoomEventMessageData &&
+          other.id == this.id &&
+          other.roomId == this.roomId &&
+          other.userId == this.userId &&
+          other.content == this.content &&
+          other.version == this.version &&
+          other.clientEventId == this.clientEventId &&
+          other.dateCreate == this.dateCreate &&
+          other.dateEdit == this.dateEdit);
+}
+
+class RoomEventMessageCompanion extends UpdateCompanion<RoomEventMessageData> {
+  final Value<String> id;
+  final Value<String> roomId;
+  final Value<String> userId;
+  final Value<String> content;
+  final Value<int> version;
+  final Value<int?> clientEventId;
+  final Value<DateTime> dateCreate;
+  final Value<DateTime> dateEdit;
+  final Value<int> rowid;
+  const RoomEventMessageCompanion({
+    this.id = const Value.absent(),
+    this.roomId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.content = const Value.absent(),
+    this.version = const Value.absent(),
+    this.clientEventId = const Value.absent(),
+    this.dateCreate = const Value.absent(),
+    this.dateEdit = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RoomEventMessageCompanion.insert({
+    required String id,
+    required String roomId,
+    required String userId,
+    required String content,
+    required int version,
+    this.clientEventId = const Value.absent(),
+    required DateTime dateCreate,
+    required DateTime dateEdit,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        roomId = Value(roomId),
+        userId = Value(userId),
+        content = Value(content),
+        version = Value(version),
+        dateCreate = Value(dateCreate),
+        dateEdit = Value(dateEdit);
+  static Insertable<RoomEventMessageData> custom({
+    Expression<String>? id,
+    Expression<String>? roomId,
+    Expression<String>? userId,
+    Expression<String>? content,
+    Expression<int>? version,
+    Expression<int>? clientEventId,
+    Expression<DateTime>? dateCreate,
+    Expression<DateTime>? dateEdit,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (roomId != null) 'room_id': roomId,
+      if (userId != null) 'user_id': userId,
+      if (content != null) 'content': content,
+      if (version != null) 'version': version,
+      if (clientEventId != null) 'client_event_id': clientEventId,
+      if (dateCreate != null) 'date_create': dateCreate,
+      if (dateEdit != null) 'date_edit': dateEdit,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RoomEventMessageCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? roomId,
+      Value<String>? userId,
+      Value<String>? content,
+      Value<int>? version,
+      Value<int?>? clientEventId,
+      Value<DateTime>? dateCreate,
+      Value<DateTime>? dateEdit,
+      Value<int>? rowid}) {
+    return RoomEventMessageCompanion(
+      id: id ?? this.id,
+      roomId: roomId ?? this.roomId,
+      userId: userId ?? this.userId,
+      content: content ?? this.content,
+      version: version ?? this.version,
+      clientEventId: clientEventId ?? this.clientEventId,
+      dateCreate: dateCreate ?? this.dateCreate,
+      dateEdit: dateEdit ?? this.dateEdit,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (roomId.present) {
+      map['room_id'] = Variable<String>(roomId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (content.present) {
+      map['content'] = Variable<String>(content.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (clientEventId.present) {
+      map['client_event_id'] = Variable<int>(clientEventId.value);
+    }
+    if (dateCreate.present) {
+      map['date_create'] = Variable<DateTime>(dateCreate.value);
+    }
+    if (dateEdit.present) {
+      map['date_edit'] = Variable<DateTime>(dateEdit.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RoomEventMessageCompanion(')
+          ..write('id: $id, ')
+          ..write('roomId: $roomId, ')
+          ..write('userId: $userId, ')
+          ..write('content: $content, ')
+          ..write('version: $version, ')
+          ..write('clientEventId: $clientEventId, ')
+          ..write('dateCreate: $dateCreate, ')
+          ..write('dateEdit: $dateEdit, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RoomEventMessageAttachmentTable extends RoomEventMessageAttachment
+    with
+        TableInfo<$RoomEventMessageAttachmentTable,
+            RoomEventMessageAttachmentData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RoomEventMessageAttachmentTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _roomEventMessageIdMeta =
+      const VerificationMeta('roomEventMessageId');
+  @override
+  late final GeneratedColumn<String> roomEventMessageId =
+      GeneratedColumn<String>('room_event_message_id', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: true,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES room_event_message (id)'));
+  static const VerificationMeta _chatAttachmentIdMeta =
+      const VerificationMeta('chatAttachmentId');
+  @override
+  late final GeneratedColumn<String> chatAttachmentId = GeneratedColumn<String>(
+      'chat_attachment_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _mimeTypeMeta =
+      const VerificationMeta('mimeType');
+  @override
+  late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
+      'mime_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _dateCreateMeta =
+      const VerificationMeta('dateCreate');
+  @override
+  late final GeneratedColumn<DateTime> dateCreate = GeneratedColumn<DateTime>(
+      'date_create', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, roomEventMessageId, chatAttachmentId, mimeType, dateCreate];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'room_event_message_attachment';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<RoomEventMessageAttachmentData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('room_event_message_id')) {
+      context.handle(
+          _roomEventMessageIdMeta,
+          roomEventMessageId.isAcceptableOrUnknown(
+              data['room_event_message_id']!, _roomEventMessageIdMeta));
+    } else if (isInserting) {
+      context.missing(_roomEventMessageIdMeta);
+    }
+    if (data.containsKey('chat_attachment_id')) {
+      context.handle(
+          _chatAttachmentIdMeta,
+          chatAttachmentId.isAcceptableOrUnknown(
+              data['chat_attachment_id']!, _chatAttachmentIdMeta));
+    } else if (isInserting) {
+      context.missing(_chatAttachmentIdMeta);
+    }
+    if (data.containsKey('mime_type')) {
+      context.handle(_mimeTypeMeta,
+          mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta));
+    } else if (isInserting) {
+      context.missing(_mimeTypeMeta);
+    }
+    if (data.containsKey('date_create')) {
+      context.handle(
+          _dateCreateMeta,
+          dateCreate.isAcceptableOrUnknown(
+              data['date_create']!, _dateCreateMeta));
+    } else if (isInserting) {
+      context.missing(_dateCreateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {roomEventMessageId, chatAttachmentId},
+      ];
+  @override
+  RoomEventMessageAttachmentData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RoomEventMessageAttachmentData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      roomEventMessageId: attachedDatabase.typeMapping.read(DriftSqlType.string,
+          data['${effectivePrefix}room_event_message_id'])!,
+      chatAttachmentId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}chat_attachment_id'])!,
+      mimeType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}mime_type'])!,
+      dateCreate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_create'])!,
+    );
+  }
+
+  @override
+  $RoomEventMessageAttachmentTable createAlias(String alias) {
+    return $RoomEventMessageAttachmentTable(attachedDatabase, alias);
   }
 }
 
@@ -700,28 +1236,12 @@ class RoomEventMessageAttachmentData extends DataClass
   final String chatAttachmentId;
   final String mimeType;
   final DateTime dateCreate;
-  RoomEventMessageAttachmentData(
+  const RoomEventMessageAttachmentData(
       {required this.id,
       required this.roomEventMessageId,
       required this.chatAttachmentId,
       required this.mimeType,
       required this.dateCreate});
-  factory RoomEventMessageAttachmentData.fromData(Map<String, dynamic> data,
-      {String? prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return RoomEventMessageAttachmentData(
-      id: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
-      roomEventMessageId: const StringType().mapFromDatabaseResponse(
-          data['${effectivePrefix}room_event_message_id'])!,
-      chatAttachmentId: const StringType().mapFromDatabaseResponse(
-          data['${effectivePrefix}chat_attachment_id'])!,
-      mimeType: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}mime_type'])!,
-      dateCreate: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_create'])!,
-    );
-  }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -813,12 +1333,14 @@ class RoomEventMessageAttachmentCompanion
   final Value<String> chatAttachmentId;
   final Value<String> mimeType;
   final Value<DateTime> dateCreate;
+  final Value<int> rowid;
   const RoomEventMessageAttachmentCompanion({
     this.id = const Value.absent(),
     this.roomEventMessageId = const Value.absent(),
     this.chatAttachmentId = const Value.absent(),
     this.mimeType = const Value.absent(),
     this.dateCreate = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RoomEventMessageAttachmentCompanion.insert({
     required String id,
@@ -826,6 +1348,7 @@ class RoomEventMessageAttachmentCompanion
     required String chatAttachmentId,
     required String mimeType,
     required DateTime dateCreate,
+    this.rowid = const Value.absent(),
   })  : id = Value(id),
         roomEventMessageId = Value(roomEventMessageId),
         chatAttachmentId = Value(chatAttachmentId),
@@ -837,6 +1360,7 @@ class RoomEventMessageAttachmentCompanion
     Expression<String>? chatAttachmentId,
     Expression<String>? mimeType,
     Expression<DateTime>? dateCreate,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -845,6 +1369,7 @@ class RoomEventMessageAttachmentCompanion
       if (chatAttachmentId != null) 'chat_attachment_id': chatAttachmentId,
       if (mimeType != null) 'mime_type': mimeType,
       if (dateCreate != null) 'date_create': dateCreate,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
@@ -853,13 +1378,15 @@ class RoomEventMessageAttachmentCompanion
       Value<String>? roomEventMessageId,
       Value<String>? chatAttachmentId,
       Value<String>? mimeType,
-      Value<DateTime>? dateCreate}) {
+      Value<DateTime>? dateCreate,
+      Value<int>? rowid}) {
     return RoomEventMessageAttachmentCompanion(
       id: id ?? this.id,
       roomEventMessageId: roomEventMessageId ?? this.roomEventMessageId,
       chatAttachmentId: chatAttachmentId ?? this.chatAttachmentId,
       mimeType: mimeType ?? this.mimeType,
       dateCreate: dateCreate ?? this.dateCreate,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -881,6 +1408,9 @@ class RoomEventMessageAttachmentCompanion
     if (dateCreate.present) {
       map['date_create'] = Variable<DateTime>(dateCreate.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -891,51 +1421,66 @@ class RoomEventMessageAttachmentCompanion
           ..write('roomEventMessageId: $roomEventMessageId, ')
           ..write('chatAttachmentId: $chatAttachmentId, ')
           ..write('mimeType: $mimeType, ')
-          ..write('dateCreate: $dateCreate')
+          ..write('dateCreate: $dateCreate, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $RoomEventMessageAttachmentTable extends RoomEventMessageAttachment
+class $RoomEventMessageReactionTable extends RoomEventMessageReaction
     with
-        TableInfo<$RoomEventMessageAttachmentTable,
-            RoomEventMessageAttachmentData> {
-  final GeneratedDatabase _db;
+        TableInfo<$RoomEventMessageReactionTable,
+            RoomEventMessageReactionData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $RoomEventMessageAttachmentTable(this._db, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  late final GeneratedColumn<String?> id = GeneratedColumn<String?>(
+  $RoomEventMessageReactionTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _roomEventMessageIdMeta =
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _roomEventMessageIdMeta =
       const VerificationMeta('roomEventMessageId');
-  late final GeneratedColumn<String?> roomEventMessageId =
-      GeneratedColumn<String?>('room_event_message_id', aliasedName, false,
-          typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _chatAttachmentIdMeta =
-      const VerificationMeta('chatAttachmentId');
-  late final GeneratedColumn<String?> chatAttachmentId =
-      GeneratedColumn<String?>('chat_attachment_id', aliasedName, false,
-          typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _mimeTypeMeta = const VerificationMeta('mimeType');
-  late final GeneratedColumn<String?> mimeType = GeneratedColumn<String?>(
-      'mime_type', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _dateCreateMeta = const VerificationMeta('dateCreate');
-  late final GeneratedColumn<DateTime?> dateCreate = GeneratedColumn<DateTime?>(
+  @override
+  late final GeneratedColumn<String> roomEventMessageId =
+      GeneratedColumn<String>('room_event_message_id', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: true,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES room_event_message (id)'));
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES user (id)'));
+  static const VerificationMeta _contentMeta =
+      const VerificationMeta('content');
+  @override
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+      'content', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _dateCreateMeta =
+      const VerificationMeta('dateCreate');
+  @override
+  late final GeneratedColumn<DateTime> dateCreate = GeneratedColumn<DateTime>(
       'date_create', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, roomEventMessageId, chatAttachmentId, mimeType, dateCreate];
+      [id, roomEventMessageId, userId, content, dateCreate];
   @override
-  String get aliasedName => _alias ?? 'room_event_message_attachment';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'room_event_message_attachment';
+  String get actualTableName => $name;
+  static const String $name = 'room_event_message_reaction';
   @override
   VerificationContext validateIntegrity(
-      Insertable<RoomEventMessageAttachmentData> instance,
+      Insertable<RoomEventMessageReactionData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -952,19 +1497,17 @@ class $RoomEventMessageAttachmentTable extends RoomEventMessageAttachment
     } else if (isInserting) {
       context.missing(_roomEventMessageIdMeta);
     }
-    if (data.containsKey('chat_attachment_id')) {
-      context.handle(
-          _chatAttachmentIdMeta,
-          chatAttachmentId.isAcceptableOrUnknown(
-              data['chat_attachment_id']!, _chatAttachmentIdMeta));
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
     } else if (isInserting) {
-      context.missing(_chatAttachmentIdMeta);
+      context.missing(_userIdMeta);
     }
-    if (data.containsKey('mime_type')) {
-      context.handle(_mimeTypeMeta,
-          mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta));
+    if (data.containsKey('content')) {
+      context.handle(_contentMeta,
+          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
     } else if (isInserting) {
-      context.missing(_mimeTypeMeta);
+      context.missing(_contentMeta);
     }
     if (data.containsKey('date_create')) {
       context.handle(
@@ -980,15 +1523,30 @@ class $RoomEventMessageAttachmentTable extends RoomEventMessageAttachment
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  RoomEventMessageAttachmentData map(Map<String, dynamic> data,
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {roomEventMessageId, userId},
+      ];
+  @override
+  RoomEventMessageReactionData map(Map<String, dynamic> data,
       {String? tablePrefix}) {
-    return RoomEventMessageAttachmentData.fromData(data,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RoomEventMessageReactionData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      roomEventMessageId: attachedDatabase.typeMapping.read(DriftSqlType.string,
+          data['${effectivePrefix}room_event_message_id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      content: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}content'])!,
+      dateCreate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_create'])!,
+    );
   }
 
   @override
-  $RoomEventMessageAttachmentTable createAlias(String alias) {
-    return $RoomEventMessageAttachmentTable(_db, alias);
+  $RoomEventMessageReactionTable createAlias(String alias) {
+    return $RoomEventMessageReactionTable(attachedDatabase, alias);
   }
 }
 
@@ -999,28 +1557,12 @@ class RoomEventMessageReactionData extends DataClass
   final String userId;
   final String content;
   final DateTime dateCreate;
-  RoomEventMessageReactionData(
+  const RoomEventMessageReactionData(
       {required this.id,
       required this.roomEventMessageId,
       required this.userId,
       required this.content,
       required this.dateCreate});
-  factory RoomEventMessageReactionData.fromData(Map<String, dynamic> data,
-      {String? prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return RoomEventMessageReactionData(
-      id: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
-      roomEventMessageId: const StringType().mapFromDatabaseResponse(
-          data['${effectivePrefix}room_event_message_id'])!,
-      userId: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}user_id'])!,
-      content: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}content'])!,
-      dateCreate: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_create'])!,
-    );
-  }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1112,12 +1654,14 @@ class RoomEventMessageReactionCompanion
   final Value<String> userId;
   final Value<String> content;
   final Value<DateTime> dateCreate;
+  final Value<int> rowid;
   const RoomEventMessageReactionCompanion({
     this.id = const Value.absent(),
     this.roomEventMessageId = const Value.absent(),
     this.userId = const Value.absent(),
     this.content = const Value.absent(),
     this.dateCreate = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RoomEventMessageReactionCompanion.insert({
     required String id,
@@ -1125,6 +1669,7 @@ class RoomEventMessageReactionCompanion
     required String userId,
     required String content,
     required DateTime dateCreate,
+    this.rowid = const Value.absent(),
   })  : id = Value(id),
         roomEventMessageId = Value(roomEventMessageId),
         userId = Value(userId),
@@ -1136,6 +1681,7 @@ class RoomEventMessageReactionCompanion
     Expression<String>? userId,
     Expression<String>? content,
     Expression<DateTime>? dateCreate,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1144,6 +1690,7 @@ class RoomEventMessageReactionCompanion
       if (userId != null) 'user_id': userId,
       if (content != null) 'content': content,
       if (dateCreate != null) 'date_create': dateCreate,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
@@ -1152,13 +1699,15 @@ class RoomEventMessageReactionCompanion
       Value<String>? roomEventMessageId,
       Value<String>? userId,
       Value<String>? content,
-      Value<DateTime>? dateCreate}) {
+      Value<DateTime>? dateCreate,
+      Value<int>? rowid}) {
     return RoomEventMessageReactionCompanion(
       id: id ?? this.id,
       roomEventMessageId: roomEventMessageId ?? this.roomEventMessageId,
       userId: userId ?? this.userId,
       content: content ?? this.content,
       dateCreate: dateCreate ?? this.dateCreate,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1180,6 +1729,9 @@ class RoomEventMessageReactionCompanion
     if (dateCreate.present) {
       map['date_create'] = Variable<DateTime>(dateCreate.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -1190,50 +1742,58 @@ class RoomEventMessageReactionCompanion
           ..write('roomEventMessageId: $roomEventMessageId, ')
           ..write('userId: $userId, ')
           ..write('content: $content, ')
-          ..write('dateCreate: $dateCreate')
+          ..write('dateCreate: $dateCreate, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $RoomEventMessageReactionTable extends RoomEventMessageReaction
-    with
-        TableInfo<$RoomEventMessageReactionTable,
-            RoomEventMessageReactionData> {
-  final GeneratedDatabase _db;
+class $RoomEventSystemTable extends RoomEventSystem
+    with TableInfo<$RoomEventSystemTable, RoomEventSystemData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $RoomEventMessageReactionTable(this._db, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  late final GeneratedColumn<String?> id = GeneratedColumn<String?>(
+  $RoomEventSystemTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _roomEventMessageIdMeta =
-      const VerificationMeta('roomEventMessageId');
-  late final GeneratedColumn<String?> roomEventMessageId =
-      GeneratedColumn<String?>('room_event_message_id', aliasedName, false,
-          typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _userIdMeta = const VerificationMeta('userId');
-  late final GeneratedColumn<String?> userId = GeneratedColumn<String?>(
-      'user_id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _contentMeta = const VerificationMeta('content');
-  late final GeneratedColumn<String?> content = GeneratedColumn<String?>(
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _roomIdMeta = const VerificationMeta('roomId');
+  @override
+  late final GeneratedColumn<String> roomId = GeneratedColumn<String>(
+      'room_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _versionMeta =
+      const VerificationMeta('version');
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+      'version', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _contentMeta =
+      const VerificationMeta('content');
+  @override
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
       'content', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _dateCreateMeta = const VerificationMeta('dateCreate');
-  late final GeneratedColumn<DateTime?> dateCreate = GeneratedColumn<DateTime?>(
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _dateCreateMeta =
+      const VerificationMeta('dateCreate');
+  @override
+  late final GeneratedColumn<DateTime> dateCreate = GeneratedColumn<DateTime>(
       'date_create', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, roomEventMessageId, userId, content, dateCreate];
+      [id, roomId, version, content, dateCreate];
   @override
-  String get aliasedName => _alias ?? 'room_event_message_reaction';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'room_event_message_reaction';
+  String get actualTableName => $name;
+  static const String $name = 'room_event_system';
   @override
   VerificationContext validateIntegrity(
-      Insertable<RoomEventMessageReactionData> instance,
+      Insertable<RoomEventSystemData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -1242,19 +1802,17 @@ class $RoomEventMessageReactionTable extends RoomEventMessageReaction
     } else if (isInserting) {
       context.missing(_idMeta);
     }
-    if (data.containsKey('room_event_message_id')) {
-      context.handle(
-          _roomEventMessageIdMeta,
-          roomEventMessageId.isAcceptableOrUnknown(
-              data['room_event_message_id']!, _roomEventMessageIdMeta));
+    if (data.containsKey('room_id')) {
+      context.handle(_roomIdMeta,
+          roomId.isAcceptableOrUnknown(data['room_id']!, _roomIdMeta));
     } else if (isInserting) {
-      context.missing(_roomEventMessageIdMeta);
+      context.missing(_roomIdMeta);
     }
-    if (data.containsKey('user_id')) {
-      context.handle(_userIdMeta,
-          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    if (data.containsKey('version')) {
+      context.handle(_versionMeta,
+          version.isAcceptableOrUnknown(data['version']!, _versionMeta));
     } else if (isInserting) {
-      context.missing(_userIdMeta);
+      context.missing(_versionMeta);
     }
     if (data.containsKey('content')) {
       context.handle(_contentMeta,
@@ -1276,15 +1834,25 @@ class $RoomEventMessageReactionTable extends RoomEventMessageReaction
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  RoomEventMessageReactionData map(Map<String, dynamic> data,
-      {String? tablePrefix}) {
-    return RoomEventMessageReactionData.fromData(data,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  RoomEventSystemData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RoomEventSystemData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      roomId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}room_id'])!,
+      version: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
+      content: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}content'])!,
+      dateCreate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_create'])!,
+    );
   }
 
   @override
-  $RoomEventMessageReactionTable createAlias(String alias) {
-    return $RoomEventMessageReactionTable(_db, alias);
+  $RoomEventSystemTable createAlias(String alias) {
+    return $RoomEventSystemTable(attachedDatabase, alias);
   }
 }
 
@@ -1295,28 +1863,12 @@ class RoomEventSystemData extends DataClass
   final int version;
   final String content;
   final DateTime dateCreate;
-  RoomEventSystemData(
+  const RoomEventSystemData(
       {required this.id,
       required this.roomId,
       required this.version,
       required this.content,
       required this.dateCreate});
-  factory RoomEventSystemData.fromData(Map<String, dynamic> data,
-      {String? prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return RoomEventSystemData(
-      id: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
-      roomId: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}room_id'])!,
-      version: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}version'])!,
-      content: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}content'])!,
-      dateCreate: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_create'])!,
-    );
-  }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1405,12 +1957,14 @@ class RoomEventSystemCompanion extends UpdateCompanion<RoomEventSystemData> {
   final Value<int> version;
   final Value<String> content;
   final Value<DateTime> dateCreate;
+  final Value<int> rowid;
   const RoomEventSystemCompanion({
     this.id = const Value.absent(),
     this.roomId = const Value.absent(),
     this.version = const Value.absent(),
     this.content = const Value.absent(),
     this.dateCreate = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RoomEventSystemCompanion.insert({
     required String id,
@@ -1418,6 +1972,7 @@ class RoomEventSystemCompanion extends UpdateCompanion<RoomEventSystemData> {
     required int version,
     required String content,
     required DateTime dateCreate,
+    this.rowid = const Value.absent(),
   })  : id = Value(id),
         roomId = Value(roomId),
         version = Value(version),
@@ -1429,6 +1984,7 @@ class RoomEventSystemCompanion extends UpdateCompanion<RoomEventSystemData> {
     Expression<int>? version,
     Expression<String>? content,
     Expression<DateTime>? dateCreate,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1436,6 +1992,7 @@ class RoomEventSystemCompanion extends UpdateCompanion<RoomEventSystemData> {
       if (version != null) 'version': version,
       if (content != null) 'content': content,
       if (dateCreate != null) 'date_create': dateCreate,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
@@ -1444,13 +2001,15 @@ class RoomEventSystemCompanion extends UpdateCompanion<RoomEventSystemData> {
       Value<String>? roomId,
       Value<int>? version,
       Value<String>? content,
-      Value<DateTime>? dateCreate}) {
+      Value<DateTime>? dateCreate,
+      Value<int>? rowid}) {
     return RoomEventSystemCompanion(
       id: id ?? this.id,
       roomId: roomId ?? this.roomId,
       version: version ?? this.version,
       content: content ?? this.content,
       dateCreate: dateCreate ?? this.dateCreate,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1472,6 +2031,9 @@ class RoomEventSystemCompanion extends UpdateCompanion<RoomEventSystemData> {
     if (dateCreate.present) {
       map['date_create'] = Variable<DateTime>(dateCreate.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -1482,351 +2044,8 @@ class RoomEventSystemCompanion extends UpdateCompanion<RoomEventSystemData> {
           ..write('roomId: $roomId, ')
           ..write('version: $version, ')
           ..write('content: $content, ')
-          ..write('dateCreate: $dateCreate')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $RoomEventSystemTable extends RoomEventSystem
-    with TableInfo<$RoomEventSystemTable, RoomEventSystemData> {
-  final GeneratedDatabase _db;
-  final String? _alias;
-  $RoomEventSystemTable(this._db, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  late final GeneratedColumn<String?> id = GeneratedColumn<String?>(
-      'id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _roomIdMeta = const VerificationMeta('roomId');
-  late final GeneratedColumn<String?> roomId = GeneratedColumn<String?>(
-      'room_id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _versionMeta = const VerificationMeta('version');
-  late final GeneratedColumn<int?> version = GeneratedColumn<int?>(
-      'version', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
-  final VerificationMeta _contentMeta = const VerificationMeta('content');
-  late final GeneratedColumn<String?> content = GeneratedColumn<String?>(
-      'content', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _dateCreateMeta = const VerificationMeta('dateCreate');
-  late final GeneratedColumn<DateTime?> dateCreate = GeneratedColumn<DateTime?>(
-      'date_create', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
-  @override
-  List<GeneratedColumn> get $columns =>
-      [id, roomId, version, content, dateCreate];
-  @override
-  String get aliasedName => _alias ?? 'room_event_system';
-  @override
-  String get actualTableName => 'room_event_system';
-  @override
-  VerificationContext validateIntegrity(
-      Insertable<RoomEventSystemData> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('room_id')) {
-      context.handle(_roomIdMeta,
-          roomId.isAcceptableOrUnknown(data['room_id']!, _roomIdMeta));
-    } else if (isInserting) {
-      context.missing(_roomIdMeta);
-    }
-    if (data.containsKey('version')) {
-      context.handle(_versionMeta,
-          version.isAcceptableOrUnknown(data['version']!, _versionMeta));
-    } else if (isInserting) {
-      context.missing(_versionMeta);
-    }
-    if (data.containsKey('content')) {
-      context.handle(_contentMeta,
-          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
-    } else if (isInserting) {
-      context.missing(_contentMeta);
-    }
-    if (data.containsKey('date_create')) {
-      context.handle(
-          _dateCreateMeta,
-          dateCreate.isAcceptableOrUnknown(
-              data['date_create']!, _dateCreateMeta));
-    } else if (isInserting) {
-      context.missing(_dateCreateMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  RoomEventSystemData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return RoomEventSystemData.fromData(data,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
-  }
-
-  @override
-  $RoomEventSystemTable createAlias(String alias) {
-    return $RoomEventSystemTable(_db, alias);
-  }
-}
-
-class RoomMemberData extends DataClass implements Insertable<RoomMemberData> {
-  final String roomId;
-  final String userId;
-  final MemberStatus memberStatus;
-  final int permission;
-  final DateTime? lastReadMarker;
-  final DateTime dateCreate;
-  final DateTime? dateUpdate;
-  RoomMemberData(
-      {required this.roomId,
-      required this.userId,
-      required this.memberStatus,
-      required this.permission,
-      this.lastReadMarker,
-      required this.dateCreate,
-      this.dateUpdate});
-  factory RoomMemberData.fromData(Map<String, dynamic> data, {String? prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return RoomMemberData(
-      roomId: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}room_id'])!,
-      userId: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}user_id'])!,
-      memberStatus: $RoomMemberTable.$converter0.mapToDart(const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}member_status']))!,
-      permission: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}permission'])!,
-      lastReadMarker: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}last_read_marker']),
-      dateCreate: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_create'])!,
-      dateUpdate: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_update']),
-    );
-  }
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['room_id'] = Variable<String>(roomId);
-    map['user_id'] = Variable<String>(userId);
-    {
-      final converter = $RoomMemberTable.$converter0;
-      map['member_status'] = Variable<int>(converter.mapToSql(memberStatus)!);
-    }
-    map['permission'] = Variable<int>(permission);
-    if (!nullToAbsent || lastReadMarker != null) {
-      map['last_read_marker'] = Variable<DateTime?>(lastReadMarker);
-    }
-    map['date_create'] = Variable<DateTime>(dateCreate);
-    if (!nullToAbsent || dateUpdate != null) {
-      map['date_update'] = Variable<DateTime?>(dateUpdate);
-    }
-    return map;
-  }
-
-  RoomMemberCompanion toCompanion(bool nullToAbsent) {
-    return RoomMemberCompanion(
-      roomId: Value(roomId),
-      userId: Value(userId),
-      memberStatus: Value(memberStatus),
-      permission: Value(permission),
-      lastReadMarker: lastReadMarker == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastReadMarker),
-      dateCreate: Value(dateCreate),
-      dateUpdate: dateUpdate == null && nullToAbsent
-          ? const Value.absent()
-          : Value(dateUpdate),
-    );
-  }
-
-  factory RoomMemberData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return RoomMemberData(
-      roomId: serializer.fromJson<String>(json['roomId']),
-      userId: serializer.fromJson<String>(json['userId']),
-      memberStatus: serializer.fromJson<MemberStatus>(json['memberStatus']),
-      permission: serializer.fromJson<int>(json['permission']),
-      lastReadMarker: serializer.fromJson<DateTime?>(json['lastReadMarker']),
-      dateCreate: serializer.fromJson<DateTime>(json['dateCreate']),
-      dateUpdate: serializer.fromJson<DateTime?>(json['dateUpdate']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'roomId': serializer.toJson<String>(roomId),
-      'userId': serializer.toJson<String>(userId),
-      'memberStatus': serializer.toJson<MemberStatus>(memberStatus),
-      'permission': serializer.toJson<int>(permission),
-      'lastReadMarker': serializer.toJson<DateTime?>(lastReadMarker),
-      'dateCreate': serializer.toJson<DateTime>(dateCreate),
-      'dateUpdate': serializer.toJson<DateTime?>(dateUpdate),
-    };
-  }
-
-  RoomMemberData copyWith(
-          {String? roomId,
-          String? userId,
-          MemberStatus? memberStatus,
-          int? permission,
-          DateTime? lastReadMarker,
-          DateTime? dateCreate,
-          DateTime? dateUpdate}) =>
-      RoomMemberData(
-        roomId: roomId ?? this.roomId,
-        userId: userId ?? this.userId,
-        memberStatus: memberStatus ?? this.memberStatus,
-        permission: permission ?? this.permission,
-        lastReadMarker: lastReadMarker ?? this.lastReadMarker,
-        dateCreate: dateCreate ?? this.dateCreate,
-        dateUpdate: dateUpdate ?? this.dateUpdate,
-      );
-  @override
-  String toString() {
-    return (StringBuffer('RoomMemberData(')
-          ..write('roomId: $roomId, ')
-          ..write('userId: $userId, ')
-          ..write('memberStatus: $memberStatus, ')
-          ..write('permission: $permission, ')
-          ..write('lastReadMarker: $lastReadMarker, ')
           ..write('dateCreate: $dateCreate, ')
-          ..write('dateUpdate: $dateUpdate')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(roomId, userId, memberStatus, permission,
-      lastReadMarker, dateCreate, dateUpdate);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is RoomMemberData &&
-          other.roomId == this.roomId &&
-          other.userId == this.userId &&
-          other.memberStatus == this.memberStatus &&
-          other.permission == this.permission &&
-          other.lastReadMarker == this.lastReadMarker &&
-          other.dateCreate == this.dateCreate &&
-          other.dateUpdate == this.dateUpdate);
-}
-
-class RoomMemberCompanion extends UpdateCompanion<RoomMemberData> {
-  final Value<String> roomId;
-  final Value<String> userId;
-  final Value<MemberStatus> memberStatus;
-  final Value<int> permission;
-  final Value<DateTime?> lastReadMarker;
-  final Value<DateTime> dateCreate;
-  final Value<DateTime?> dateUpdate;
-  const RoomMemberCompanion({
-    this.roomId = const Value.absent(),
-    this.userId = const Value.absent(),
-    this.memberStatus = const Value.absent(),
-    this.permission = const Value.absent(),
-    this.lastReadMarker = const Value.absent(),
-    this.dateCreate = const Value.absent(),
-    this.dateUpdate = const Value.absent(),
-  });
-  RoomMemberCompanion.insert({
-    required String roomId,
-    required String userId,
-    required MemberStatus memberStatus,
-    required int permission,
-    this.lastReadMarker = const Value.absent(),
-    required DateTime dateCreate,
-    this.dateUpdate = const Value.absent(),
-  })  : roomId = Value(roomId),
-        userId = Value(userId),
-        memberStatus = Value(memberStatus),
-        permission = Value(permission),
-        dateCreate = Value(dateCreate);
-  static Insertable<RoomMemberData> custom({
-    Expression<String>? roomId,
-    Expression<String>? userId,
-    Expression<MemberStatus>? memberStatus,
-    Expression<int>? permission,
-    Expression<DateTime?>? lastReadMarker,
-    Expression<DateTime>? dateCreate,
-    Expression<DateTime?>? dateUpdate,
-  }) {
-    return RawValuesInsertable({
-      if (roomId != null) 'room_id': roomId,
-      if (userId != null) 'user_id': userId,
-      if (memberStatus != null) 'member_status': memberStatus,
-      if (permission != null) 'permission': permission,
-      if (lastReadMarker != null) 'last_read_marker': lastReadMarker,
-      if (dateCreate != null) 'date_create': dateCreate,
-      if (dateUpdate != null) 'date_update': dateUpdate,
-    });
-  }
-
-  RoomMemberCompanion copyWith(
-      {Value<String>? roomId,
-      Value<String>? userId,
-      Value<MemberStatus>? memberStatus,
-      Value<int>? permission,
-      Value<DateTime?>? lastReadMarker,
-      Value<DateTime>? dateCreate,
-      Value<DateTime?>? dateUpdate}) {
-    return RoomMemberCompanion(
-      roomId: roomId ?? this.roomId,
-      userId: userId ?? this.userId,
-      memberStatus: memberStatus ?? this.memberStatus,
-      permission: permission ?? this.permission,
-      lastReadMarker: lastReadMarker ?? this.lastReadMarker,
-      dateCreate: dateCreate ?? this.dateCreate,
-      dateUpdate: dateUpdate ?? this.dateUpdate,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (roomId.present) {
-      map['room_id'] = Variable<String>(roomId.value);
-    }
-    if (userId.present) {
-      map['user_id'] = Variable<String>(userId.value);
-    }
-    if (memberStatus.present) {
-      final converter = $RoomMemberTable.$converter0;
-      map['member_status'] =
-          Variable<int>(converter.mapToSql(memberStatus.value)!);
-    }
-    if (permission.present) {
-      map['permission'] = Variable<int>(permission.value);
-    }
-    if (lastReadMarker.present) {
-      map['last_read_marker'] = Variable<DateTime?>(lastReadMarker.value);
-    }
-    if (dateCreate.present) {
-      map['date_create'] = Variable<DateTime>(dateCreate.value);
-    }
-    if (dateUpdate.present) {
-      map['date_update'] = Variable<DateTime?>(dateUpdate.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('RoomMemberCompanion(')
-          ..write('roomId: $roomId, ')
-          ..write('userId: $userId, ')
-          ..write('memberStatus: $memberStatus, ')
-          ..write('permission: $permission, ')
-          ..write('lastReadMarker: $lastReadMarker, ')
-          ..write('dateCreate: $dateCreate, ')
-          ..write('dateUpdate: $dateUpdate')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1834,40 +2053,57 @@ class RoomMemberCompanion extends UpdateCompanion<RoomMemberData> {
 
 class $RoomMemberTable extends RoomMember
     with TableInfo<$RoomMemberTable, RoomMemberData> {
-  final GeneratedDatabase _db;
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $RoomMemberTable(this._db, [this._alias]);
-  final VerificationMeta _roomIdMeta = const VerificationMeta('roomId');
-  late final GeneratedColumn<String?> roomId = GeneratedColumn<String?>(
+  $RoomMemberTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _roomIdMeta = const VerificationMeta('roomId');
+  @override
+  late final GeneratedColumn<String> roomId = GeneratedColumn<String>(
       'room_id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _userIdMeta = const VerificationMeta('userId');
-  late final GeneratedColumn<String?> userId = GeneratedColumn<String?>(
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES room (id)'));
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
       'user_id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _memberStatusMeta =
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES user (id)'));
+  static const VerificationMeta _memberStatusMeta =
       const VerificationMeta('memberStatus');
-  late final GeneratedColumnWithTypeConverter<MemberStatus, int?> memberStatus =
-      GeneratedColumn<int?>('member_status', aliasedName, false,
-              typeName: 'INTEGER', requiredDuringInsert: true)
-          .withConverter<MemberStatus>($RoomMemberTable.$converter0);
-  final VerificationMeta _permissionMeta = const VerificationMeta('permission');
-  late final GeneratedColumn<int?> permission = GeneratedColumn<int?>(
+  @override
+  late final GeneratedColumnWithTypeConverter<MemberStatus, int> memberStatus =
+      GeneratedColumn<int>('member_status', aliasedName, false,
+              type: DriftSqlType.int, requiredDuringInsert: true)
+          .withConverter<MemberStatus>($RoomMemberTable.$convertermemberStatus);
+  static const VerificationMeta _permissionMeta =
+      const VerificationMeta('permission');
+  @override
+  late final GeneratedColumn<int> permission = GeneratedColumn<int>(
       'permission', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
-  final VerificationMeta _lastReadMarkerMeta =
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _lastReadMarkerMeta =
       const VerificationMeta('lastReadMarker');
-  late final GeneratedColumn<DateTime?> lastReadMarker =
-      GeneratedColumn<DateTime?>('last_read_marker', aliasedName, true,
-          typeName: 'INTEGER', requiredDuringInsert: false);
-  final VerificationMeta _dateCreateMeta = const VerificationMeta('dateCreate');
-  late final GeneratedColumn<DateTime?> dateCreate = GeneratedColumn<DateTime?>(
+  @override
+  late final GeneratedColumn<DateTime> lastReadMarker =
+      GeneratedColumn<DateTime>('last_read_marker', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _dateCreateMeta =
+      const VerificationMeta('dateCreate');
+  @override
+  late final GeneratedColumn<DateTime> dateCreate = GeneratedColumn<DateTime>(
       'date_create', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
-  final VerificationMeta _dateUpdateMeta = const VerificationMeta('dateUpdate');
-  late final GeneratedColumn<DateTime?> dateUpdate = GeneratedColumn<DateTime?>(
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _dateUpdateMeta =
+      const VerificationMeta('dateUpdate');
+  @override
+  late final GeneratedColumn<DateTime> dateUpdate = GeneratedColumn<DateTime>(
       'date_update', aliasedName, true,
-      typeName: 'INTEGER', requiredDuringInsert: false);
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         roomId,
@@ -1879,9 +2115,10 @@ class $RoomMemberTable extends RoomMember
         dateUpdate
       ];
   @override
-  String get aliasedName => _alias ?? 'room_member';
+  String get aliasedName => _alias ?? actualTableName;
   @override
-  String get actualTableName => 'room_member';
+  String get actualTableName => $name;
+  static const String $name = 'room_member';
   @override
   VerificationContext validateIntegrity(Insertable<RoomMemberData> instance,
       {bool isInserting = false}) {
@@ -1935,86 +2172,80 @@ class $RoomMemberTable extends RoomMember
   Set<GeneratedColumn> get $primaryKey => {roomId, userId};
   @override
   RoomMemberData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return RoomMemberData.fromData(data,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RoomMemberData(
+      roomId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}room_id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      memberStatus: $RoomMemberTable.$convertermemberStatus.fromSql(
+          attachedDatabase.typeMapping.read(
+              DriftSqlType.int, data['${effectivePrefix}member_status'])!),
+      permission: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}permission'])!,
+      lastReadMarker: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_read_marker']),
+      dateCreate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_create'])!,
+      dateUpdate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date_update']),
+    );
   }
 
   @override
   $RoomMemberTable createAlias(String alias) {
-    return $RoomMemberTable(_db, alias);
+    return $RoomMemberTable(attachedDatabase, alias);
   }
 
-  static TypeConverter<MemberStatus, int> $converter0 =
+  static JsonTypeConverter2<MemberStatus, int, int> $convertermemberStatus =
       const EnumIndexConverter<MemberStatus>(MemberStatus.values);
 }
 
-class UserData extends DataClass implements Insertable<UserData> {
-  final String id;
-  final String? login;
-  final String? password;
-  final String fullName;
-  final String? avatar;
+class RoomMemberData extends DataClass implements Insertable<RoomMemberData> {
+  final String roomId;
+  final String userId;
+  final MemberStatus memberStatus;
+  final int permission;
+  final DateTime? lastReadMarker;
   final DateTime dateCreate;
   final DateTime? dateUpdate;
-  UserData(
-      {required this.id,
-      this.login,
-      this.password,
-      required this.fullName,
-      this.avatar,
+  const RoomMemberData(
+      {required this.roomId,
+      required this.userId,
+      required this.memberStatus,
+      required this.permission,
+      this.lastReadMarker,
       required this.dateCreate,
       this.dateUpdate});
-  factory UserData.fromData(Map<String, dynamic> data, {String? prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return UserData(
-      id: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
-      login: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}login']),
-      password: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}password']),
-      fullName: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}full_name'])!,
-      avatar: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}avatar']),
-      dateCreate: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_create'])!,
-      dateUpdate: const DateTimeType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}date_update']),
-    );
-  }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    if (!nullToAbsent || login != null) {
-      map['login'] = Variable<String?>(login);
+    map['room_id'] = Variable<String>(roomId);
+    map['user_id'] = Variable<String>(userId);
+    {
+      final converter = $RoomMemberTable.$convertermemberStatus;
+      map['member_status'] = Variable<int>(converter.toSql(memberStatus));
     }
-    if (!nullToAbsent || password != null) {
-      map['password'] = Variable<String?>(password);
-    }
-    map['full_name'] = Variable<String>(fullName);
-    if (!nullToAbsent || avatar != null) {
-      map['avatar'] = Variable<String?>(avatar);
+    map['permission'] = Variable<int>(permission);
+    if (!nullToAbsent || lastReadMarker != null) {
+      map['last_read_marker'] = Variable<DateTime>(lastReadMarker);
     }
     map['date_create'] = Variable<DateTime>(dateCreate);
     if (!nullToAbsent || dateUpdate != null) {
-      map['date_update'] = Variable<DateTime?>(dateUpdate);
+      map['date_update'] = Variable<DateTime>(dateUpdate);
     }
     return map;
   }
 
-  UserCompanion toCompanion(bool nullToAbsent) {
-    return UserCompanion(
-      id: Value(id),
-      login:
-          login == null && nullToAbsent ? const Value.absent() : Value(login),
-      password: password == null && nullToAbsent
+  RoomMemberCompanion toCompanion(bool nullToAbsent) {
+    return RoomMemberCompanion(
+      roomId: Value(roomId),
+      userId: Value(userId),
+      memberStatus: Value(memberStatus),
+      permission: Value(permission),
+      lastReadMarker: lastReadMarker == null && nullToAbsent
           ? const Value.absent()
-          : Value(password),
-      fullName: Value(fullName),
-      avatar:
-          avatar == null && nullToAbsent ? const Value.absent() : Value(avatar),
+          : Value(lastReadMarker),
       dateCreate: Value(dateCreate),
       dateUpdate: dateUpdate == null && nullToAbsent
           ? const Value.absent()
@@ -2022,15 +2253,16 @@ class UserData extends DataClass implements Insertable<UserData> {
     );
   }
 
-  factory UserData.fromJson(Map<String, dynamic> json,
+  factory RoomMemberData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return UserData(
-      id: serializer.fromJson<String>(json['id']),
-      login: serializer.fromJson<String?>(json['login']),
-      password: serializer.fromJson<String?>(json['password']),
-      fullName: serializer.fromJson<String>(json['fullName']),
-      avatar: serializer.fromJson<String?>(json['avatar']),
+    return RoomMemberData(
+      roomId: serializer.fromJson<String>(json['roomId']),
+      userId: serializer.fromJson<String>(json['userId']),
+      memberStatus: $RoomMemberTable.$convertermemberStatus
+          .fromJson(serializer.fromJson<int>(json['memberStatus'])),
+      permission: serializer.fromJson<int>(json['permission']),
+      lastReadMarker: serializer.fromJson<DateTime?>(json['lastReadMarker']),
       dateCreate: serializer.fromJson<DateTime>(json['dateCreate']),
       dateUpdate: serializer.fromJson<DateTime?>(json['dateUpdate']),
     );
@@ -2039,41 +2271,43 @@ class UserData extends DataClass implements Insertable<UserData> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'login': serializer.toJson<String?>(login),
-      'password': serializer.toJson<String?>(password),
-      'fullName': serializer.toJson<String>(fullName),
-      'avatar': serializer.toJson<String?>(avatar),
+      'roomId': serializer.toJson<String>(roomId),
+      'userId': serializer.toJson<String>(userId),
+      'memberStatus': serializer.toJson<int>(
+          $RoomMemberTable.$convertermemberStatus.toJson(memberStatus)),
+      'permission': serializer.toJson<int>(permission),
+      'lastReadMarker': serializer.toJson<DateTime?>(lastReadMarker),
       'dateCreate': serializer.toJson<DateTime>(dateCreate),
       'dateUpdate': serializer.toJson<DateTime?>(dateUpdate),
     };
   }
 
-  UserData copyWith(
-          {String? id,
-          String? login,
-          String? password,
-          String? fullName,
-          String? avatar,
+  RoomMemberData copyWith(
+          {String? roomId,
+          String? userId,
+          MemberStatus? memberStatus,
+          int? permission,
+          Value<DateTime?> lastReadMarker = const Value.absent(),
           DateTime? dateCreate,
-          DateTime? dateUpdate}) =>
-      UserData(
-        id: id ?? this.id,
-        login: login ?? this.login,
-        password: password ?? this.password,
-        fullName: fullName ?? this.fullName,
-        avatar: avatar ?? this.avatar,
+          Value<DateTime?> dateUpdate = const Value.absent()}) =>
+      RoomMemberData(
+        roomId: roomId ?? this.roomId,
+        userId: userId ?? this.userId,
+        memberStatus: memberStatus ?? this.memberStatus,
+        permission: permission ?? this.permission,
+        lastReadMarker:
+            lastReadMarker.present ? lastReadMarker.value : this.lastReadMarker,
         dateCreate: dateCreate ?? this.dateCreate,
-        dateUpdate: dateUpdate ?? this.dateUpdate,
+        dateUpdate: dateUpdate.present ? dateUpdate.value : this.dateUpdate,
       );
   @override
   String toString() {
-    return (StringBuffer('UserData(')
-          ..write('id: $id, ')
-          ..write('login: $login, ')
-          ..write('password: $password, ')
-          ..write('fullName: $fullName, ')
-          ..write('avatar: $avatar, ')
+    return (StringBuffer('RoomMemberData(')
+          ..write('roomId: $roomId, ')
+          ..write('userId: $userId, ')
+          ..write('memberStatus: $memberStatus, ')
+          ..write('permission: $permission, ')
+          ..write('lastReadMarker: $lastReadMarker, ')
           ..write('dateCreate: $dateCreate, ')
           ..write('dateUpdate: $dateUpdate')
           ..write(')'))
@@ -2081,171 +2315,184 @@ class UserData extends DataClass implements Insertable<UserData> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, login, password, fullName, avatar, dateCreate, dateUpdate);
+  int get hashCode => Object.hash(roomId, userId, memberStatus, permission,
+      lastReadMarker, dateCreate, dateUpdate);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is UserData &&
-          other.id == this.id &&
-          other.login == this.login &&
-          other.password == this.password &&
-          other.fullName == this.fullName &&
-          other.avatar == this.avatar &&
+      (other is RoomMemberData &&
+          other.roomId == this.roomId &&
+          other.userId == this.userId &&
+          other.memberStatus == this.memberStatus &&
+          other.permission == this.permission &&
+          other.lastReadMarker == this.lastReadMarker &&
           other.dateCreate == this.dateCreate &&
           other.dateUpdate == this.dateUpdate);
 }
 
-class UserCompanion extends UpdateCompanion<UserData> {
-  final Value<String> id;
-  final Value<String?> login;
-  final Value<String?> password;
-  final Value<String> fullName;
-  final Value<String?> avatar;
+class RoomMemberCompanion extends UpdateCompanion<RoomMemberData> {
+  final Value<String> roomId;
+  final Value<String> userId;
+  final Value<MemberStatus> memberStatus;
+  final Value<int> permission;
+  final Value<DateTime?> lastReadMarker;
   final Value<DateTime> dateCreate;
   final Value<DateTime?> dateUpdate;
-  const UserCompanion({
-    this.id = const Value.absent(),
-    this.login = const Value.absent(),
-    this.password = const Value.absent(),
-    this.fullName = const Value.absent(),
-    this.avatar = const Value.absent(),
+  final Value<int> rowid;
+  const RoomMemberCompanion({
+    this.roomId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.memberStatus = const Value.absent(),
+    this.permission = const Value.absent(),
+    this.lastReadMarker = const Value.absent(),
     this.dateCreate = const Value.absent(),
     this.dateUpdate = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
-  UserCompanion.insert({
-    required String id,
-    this.login = const Value.absent(),
-    this.password = const Value.absent(),
-    required String fullName,
-    this.avatar = const Value.absent(),
+  RoomMemberCompanion.insert({
+    required String roomId,
+    required String userId,
+    required MemberStatus memberStatus,
+    required int permission,
+    this.lastReadMarker = const Value.absent(),
     required DateTime dateCreate,
     this.dateUpdate = const Value.absent(),
-  })  : id = Value(id),
-        fullName = Value(fullName),
+    this.rowid = const Value.absent(),
+  })  : roomId = Value(roomId),
+        userId = Value(userId),
+        memberStatus = Value(memberStatus),
+        permission = Value(permission),
         dateCreate = Value(dateCreate);
-  static Insertable<UserData> custom({
-    Expression<String>? id,
-    Expression<String?>? login,
-    Expression<String?>? password,
-    Expression<String>? fullName,
-    Expression<String?>? avatar,
+  static Insertable<RoomMemberData> custom({
+    Expression<String>? roomId,
+    Expression<String>? userId,
+    Expression<int>? memberStatus,
+    Expression<int>? permission,
+    Expression<DateTime>? lastReadMarker,
     Expression<DateTime>? dateCreate,
-    Expression<DateTime?>? dateUpdate,
+    Expression<DateTime>? dateUpdate,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (login != null) 'login': login,
-      if (password != null) 'password': password,
-      if (fullName != null) 'full_name': fullName,
-      if (avatar != null) 'avatar': avatar,
+      if (roomId != null) 'room_id': roomId,
+      if (userId != null) 'user_id': userId,
+      if (memberStatus != null) 'member_status': memberStatus,
+      if (permission != null) 'permission': permission,
+      if (lastReadMarker != null) 'last_read_marker': lastReadMarker,
       if (dateCreate != null) 'date_create': dateCreate,
       if (dateUpdate != null) 'date_update': dateUpdate,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
-  UserCompanion copyWith(
-      {Value<String>? id,
-      Value<String?>? login,
-      Value<String?>? password,
-      Value<String>? fullName,
-      Value<String?>? avatar,
+  RoomMemberCompanion copyWith(
+      {Value<String>? roomId,
+      Value<String>? userId,
+      Value<MemberStatus>? memberStatus,
+      Value<int>? permission,
+      Value<DateTime?>? lastReadMarker,
       Value<DateTime>? dateCreate,
-      Value<DateTime?>? dateUpdate}) {
-    return UserCompanion(
-      id: id ?? this.id,
-      login: login ?? this.login,
-      password: password ?? this.password,
-      fullName: fullName ?? this.fullName,
-      avatar: avatar ?? this.avatar,
+      Value<DateTime?>? dateUpdate,
+      Value<int>? rowid}) {
+    return RoomMemberCompanion(
+      roomId: roomId ?? this.roomId,
+      userId: userId ?? this.userId,
+      memberStatus: memberStatus ?? this.memberStatus,
+      permission: permission ?? this.permission,
+      lastReadMarker: lastReadMarker ?? this.lastReadMarker,
       dateCreate: dateCreate ?? this.dateCreate,
       dateUpdate: dateUpdate ?? this.dateUpdate,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
+    if (roomId.present) {
+      map['room_id'] = Variable<String>(roomId.value);
     }
-    if (login.present) {
-      map['login'] = Variable<String?>(login.value);
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
     }
-    if (password.present) {
-      map['password'] = Variable<String?>(password.value);
+    if (memberStatus.present) {
+      final converter = $RoomMemberTable.$convertermemberStatus;
+
+      map['member_status'] = Variable<int>(converter.toSql(memberStatus.value));
     }
-    if (fullName.present) {
-      map['full_name'] = Variable<String>(fullName.value);
+    if (permission.present) {
+      map['permission'] = Variable<int>(permission.value);
     }
-    if (avatar.present) {
-      map['avatar'] = Variable<String?>(avatar.value);
+    if (lastReadMarker.present) {
+      map['last_read_marker'] = Variable<DateTime>(lastReadMarker.value);
     }
     if (dateCreate.present) {
       map['date_create'] = Variable<DateTime>(dateCreate.value);
     }
     if (dateUpdate.present) {
-      map['date_update'] = Variable<DateTime?>(dateUpdate.value);
+      map['date_update'] = Variable<DateTime>(dateUpdate.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
 
   @override
   String toString() {
-    return (StringBuffer('UserCompanion(')
-          ..write('id: $id, ')
-          ..write('login: $login, ')
-          ..write('password: $password, ')
-          ..write('fullName: $fullName, ')
-          ..write('avatar: $avatar, ')
+    return (StringBuffer('RoomMemberCompanion(')
+          ..write('roomId: $roomId, ')
+          ..write('userId: $userId, ')
+          ..write('memberStatus: $memberStatus, ')
+          ..write('permission: $permission, ')
+          ..write('lastReadMarker: $lastReadMarker, ')
           ..write('dateCreate: $dateCreate, ')
-          ..write('dateUpdate: $dateUpdate')
+          ..write('dateUpdate: $dateUpdate, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $UserTable extends User with TableInfo<$UserTable, UserData> {
-  final GeneratedDatabase _db;
+class $UserPushTable extends UserPush
+    with TableInfo<$UserPushTable, UserPushData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $UserTable(this._db, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  late final GeneratedColumn<String?> id = GeneratedColumn<String?>(
+  $UserPushTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _loginMeta = const VerificationMeta('login');
-  late final GeneratedColumn<String?> login = GeneratedColumn<String?>(
-      'login', aliasedName, true,
-      typeName: 'TEXT', requiredDuringInsert: false);
-  final VerificationMeta _passwordMeta = const VerificationMeta('password');
-  late final GeneratedColumn<String?> password = GeneratedColumn<String?>(
-      'password', aliasedName, true,
-      typeName: 'TEXT', requiredDuringInsert: false);
-  final VerificationMeta _fullNameMeta = const VerificationMeta('fullName');
-  late final GeneratedColumn<String?> fullName = GeneratedColumn<String?>(
-      'full_name', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _avatarMeta = const VerificationMeta('avatar');
-  late final GeneratedColumn<String?> avatar = GeneratedColumn<String?>(
-      'avatar', aliasedName, true,
-      typeName: 'TEXT', requiredDuringInsert: false);
-  final VerificationMeta _dateCreateMeta = const VerificationMeta('dateCreate');
-  late final GeneratedColumn<DateTime?> dateCreate = GeneratedColumn<DateTime?>(
-      'date_create', aliasedName, false,
-      typeName: 'INTEGER', requiredDuringInsert: true);
-  final VerificationMeta _dateUpdateMeta = const VerificationMeta('dateUpdate');
-  late final GeneratedColumn<DateTime?> dateUpdate = GeneratedColumn<DateTime?>(
-      'date_update', aliasedName, true,
-      typeName: 'INTEGER', requiredDuringInsert: false);
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, login, password, fullName, avatar, dateCreate, dateUpdate];
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES user (id)'));
+  static const VerificationMeta _deviceNameMeta =
+      const VerificationMeta('deviceName');
   @override
-  String get aliasedName => _alias ?? 'user';
+  late final GeneratedColumn<String> deviceName = GeneratedColumn<String>(
+      'device_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _tokenMeta = const VerificationMeta('token');
   @override
-  String get actualTableName => 'user';
+  late final GeneratedColumn<String> token = GeneratedColumn<String>(
+      'token', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   @override
-  VerificationContext validateIntegrity(Insertable<UserData> instance,
+  List<GeneratedColumn> get $columns => [id, userId, deviceName, token];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_push';
+  @override
+  VerificationContext validateIntegrity(Insertable<UserPushData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -2254,37 +2501,25 @@ class $UserTable extends User with TableInfo<$UserTable, UserData> {
     } else if (isInserting) {
       context.missing(_idMeta);
     }
-    if (data.containsKey('login')) {
-      context.handle(
-          _loginMeta, login.isAcceptableOrUnknown(data['login']!, _loginMeta));
-    }
-    if (data.containsKey('password')) {
-      context.handle(_passwordMeta,
-          password.isAcceptableOrUnknown(data['password']!, _passwordMeta));
-    }
-    if (data.containsKey('full_name')) {
-      context.handle(_fullNameMeta,
-          fullName.isAcceptableOrUnknown(data['full_name']!, _fullNameMeta));
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
     } else if (isInserting) {
-      context.missing(_fullNameMeta);
+      context.missing(_userIdMeta);
     }
-    if (data.containsKey('avatar')) {
-      context.handle(_avatarMeta,
-          avatar.isAcceptableOrUnknown(data['avatar']!, _avatarMeta));
-    }
-    if (data.containsKey('date_create')) {
+    if (data.containsKey('device_name')) {
       context.handle(
-          _dateCreateMeta,
-          dateCreate.isAcceptableOrUnknown(
-              data['date_create']!, _dateCreateMeta));
+          _deviceNameMeta,
+          deviceName.isAcceptableOrUnknown(
+              data['device_name']!, _deviceNameMeta));
     } else if (isInserting) {
-      context.missing(_dateCreateMeta);
+      context.missing(_deviceNameMeta);
     }
-    if (data.containsKey('date_update')) {
+    if (data.containsKey('token')) {
       context.handle(
-          _dateUpdateMeta,
-          dateUpdate.isAcceptableOrUnknown(
-              data['date_update']!, _dateUpdateMeta));
+          _tokenMeta, token.isAcceptableOrUnknown(data['token']!, _tokenMeta));
+    } else if (isInserting) {
+      context.missing(_tokenMeta);
     }
     return context;
   }
@@ -2292,14 +2527,27 @@ class $UserTable extends User with TableInfo<$UserTable, UserData> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  UserData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return UserData.fromData(data,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {userId, deviceName},
+      ];
+  @override
+  UserPushData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserPushData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      deviceName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}device_name'])!,
+      token: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}token'])!,
+    );
   }
 
   @override
-  $UserTable createAlias(String alias) {
-    return $UserTable(_db, alias);
+  $UserPushTable createAlias(String alias) {
+    return $UserPushTable(attachedDatabase, alias);
   }
 }
 
@@ -2308,24 +2556,11 @@ class UserPushData extends DataClass implements Insertable<UserPushData> {
   final String userId;
   final String deviceName;
   final String token;
-  UserPushData(
+  const UserPushData(
       {required this.id,
       required this.userId,
       required this.deviceName,
       required this.token});
-  factory UserPushData.fromData(Map<String, dynamic> data, {String? prefix}) {
-    final effectivePrefix = prefix ?? '';
-    return UserPushData(
-      id: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
-      userId: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}user_id'])!,
-      deviceName: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}device_name'])!,
-      token: const StringType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}token'])!,
-    );
-  }
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2402,17 +2637,20 @@ class UserPushCompanion extends UpdateCompanion<UserPushData> {
   final Value<String> userId;
   final Value<String> deviceName;
   final Value<String> token;
+  final Value<int> rowid;
   const UserPushCompanion({
     this.id = const Value.absent(),
     this.userId = const Value.absent(),
     this.deviceName = const Value.absent(),
     this.token = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   UserPushCompanion.insert({
     required String id,
     required String userId,
     required String deviceName,
     required String token,
+    this.rowid = const Value.absent(),
   })  : id = Value(id),
         userId = Value(userId),
         deviceName = Value(deviceName),
@@ -2422,12 +2660,14 @@ class UserPushCompanion extends UpdateCompanion<UserPushData> {
     Expression<String>? userId,
     Expression<String>? deviceName,
     Expression<String>? token,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (userId != null) 'user_id': userId,
       if (deviceName != null) 'device_name': deviceName,
       if (token != null) 'token': token,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
@@ -2435,12 +2675,14 @@ class UserPushCompanion extends UpdateCompanion<UserPushData> {
       {Value<String>? id,
       Value<String>? userId,
       Value<String>? deviceName,
-      Value<String>? token}) {
+      Value<String>? token,
+      Value<int>? rowid}) {
     return UserPushCompanion(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       deviceName: deviceName ?? this.deviceName,
       token: token ?? this.token,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -2459,6 +2701,9 @@ class UserPushCompanion extends UpdateCompanion<UserPushData> {
     if (token.present) {
       map['token'] = Variable<String>(token.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -2468,89 +2713,17 @@ class UserPushCompanion extends UpdateCompanion<UserPushData> {
           ..write('id: $id, ')
           ..write('userId: $userId, ')
           ..write('deviceName: $deviceName, ')
-          ..write('token: $token')
+          ..write('token: $token, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $UserPushTable extends UserPush
-    with TableInfo<$UserPushTable, UserPushData> {
-  final GeneratedDatabase _db;
-  final String? _alias;
-  $UserPushTable(this._db, [this._alias]);
-  final VerificationMeta _idMeta = const VerificationMeta('id');
-  late final GeneratedColumn<String?> id = GeneratedColumn<String?>(
-      'id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _userIdMeta = const VerificationMeta('userId');
-  late final GeneratedColumn<String?> userId = GeneratedColumn<String?>(
-      'user_id', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _deviceNameMeta = const VerificationMeta('deviceName');
-  late final GeneratedColumn<String?> deviceName = GeneratedColumn<String?>(
-      'device_name', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  final VerificationMeta _tokenMeta = const VerificationMeta('token');
-  late final GeneratedColumn<String?> token = GeneratedColumn<String?>(
-      'token', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
-  @override
-  List<GeneratedColumn> get $columns => [id, userId, deviceName, token];
-  @override
-  String get aliasedName => _alias ?? 'user_push';
-  @override
-  String get actualTableName => 'user_push';
-  @override
-  VerificationContext validateIntegrity(Insertable<UserPushData> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
-    }
-    if (data.containsKey('user_id')) {
-      context.handle(_userIdMeta,
-          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
-    } else if (isInserting) {
-      context.missing(_userIdMeta);
-    }
-    if (data.containsKey('device_name')) {
-      context.handle(
-          _deviceNameMeta,
-          deviceName.isAcceptableOrUnknown(
-              data['device_name']!, _deviceNameMeta));
-    } else if (isInserting) {
-      context.missing(_deviceNameMeta);
-    }
-    if (data.containsKey('token')) {
-      context.handle(
-          _tokenMeta, token.isAcceptableOrUnknown(data['token']!, _tokenMeta));
-    } else if (isInserting) {
-      context.missing(_tokenMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  UserPushData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return UserPushData.fromData(data,
-        prefix: tablePrefix != null ? '$tablePrefix.' : null);
-  }
-
-  @override
-  $UserPushTable createAlias(String alias) {
-    return $UserPushTable(_db, alias);
-  }
-}
-
 abstract class _$ChatDatabase extends GeneratedDatabase {
-  _$ChatDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
+  _$ChatDatabase(QueryExecutor e) : super(e);
   late final $RoomTable room = $RoomTable(this);
+  late final $UserTable user = $UserTable(this);
   late final $RoomEventMessageTable roomEventMessage =
       $RoomEventMessageTable(this);
   late final $RoomEventMessageAttachmentTable roomEventMessageAttachment =
@@ -2560,30 +2733,30 @@ abstract class _$ChatDatabase extends GeneratedDatabase {
   late final $RoomEventSystemTable roomEventSystem =
       $RoomEventSystemTable(this);
   late final $RoomMemberTable roomMember = $RoomMemberTable(this);
-  late final $UserTable user = $UserTable(this);
   late final $UserPushTable userPush = $UserPushTable(this);
   Selectable<int?> lastGeneratedEventMessageId(String userId) {
     return customSelect(
-        'select max(client_event_id) from room_event_message where user_id=:userId;',
+        'SELECT max(client_event_id) AS _c0 FROM room_event_message WHERE user_id = ?1',
         variables: [
           Variable<String>(userId)
         ],
         readsFrom: {
           roomEventMessage,
-        }).map((QueryRow row) => row.read<int?>('max(client_event_id)'));
+        }).map((QueryRow row) => row.readNullable<int>('_c0'));
   }
 
   @override
-  Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
+  Iterable<TableInfo<Table, Object?>> get allTables =>
+      allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         room,
+        user,
         roomEventMessage,
         roomEventMessageAttachment,
         roomEventMessageReaction,
         roomEventSystem,
         roomMember,
-        user,
         userPush
       ];
 }

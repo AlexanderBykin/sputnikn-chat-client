@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 
 class TransportContainer {
-  final int msgId;
-  final Uint8List bytes;
-
-  TransportContainer(
+  const TransportContainer(
     this.msgId,
     this.bytes,
   );
+
+  final int msgId;
+  final Uint8List bytes;
 }

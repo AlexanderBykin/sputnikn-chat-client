@@ -1,4 +1,6 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
+// ignore_for_file: no_default_cases
+
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
 import 'package:sputnikn_chat_client/model/request/since_time_filter.dart';
 import 'package:sputnikn_chat_client/model/request_proto_mixin.dart';
 
@@ -8,22 +10,22 @@ enum RoomEventType {
   roomEventTypeSystem,
 }
 
-class SyncRoomFilter with RequestProtoMixin<Proto.SyncRoomFilter> {
-  final String roomId;
-  final SinceTimeFilter? sinceTimeFilter;
-  final RoomEventType eventFilter;
-  final int eventLimit;
-
-  SyncRoomFilter({
+class SyncRoomFilter with RequestProtoMixin<proto.SyncRoomFilter> {
+  const SyncRoomFilter({
     required this.roomId,
     required this.sinceTimeFilter,
     required this.eventFilter,
     required this.eventLimit,
   });
 
+  final String roomId;
+  final SinceTimeFilter? sinceTimeFilter;
+  final RoomEventType eventFilter;
+  final int eventLimit;
+
   @override
-  Proto.SyncRoomFilter toProto() {
-    return Proto.SyncRoomFilter(
+  proto.SyncRoomFilter toProto() {
+    return proto.SyncRoomFilter(
       roomId: roomId,
       sinceFilter: sinceTimeFilter?.toProto(),
       eventFilter: eventFilterToProto(eventFilter),
@@ -31,16 +33,16 @@ class SyncRoomFilter with RequestProtoMixin<Proto.SyncRoomFilter> {
     );
   }
 
-  Proto.RoomEventType eventFilterToProto(RoomEventType eventType) {
+  proto.RoomEventType eventFilterToProto(RoomEventType eventType) {
     switch (eventType) {
       case RoomEventType.roomEventTypeAll:
-        return Proto.RoomEventType.roomEventTypeAll;
+        return proto.RoomEventType.roomEventTypeAll;
       case RoomEventType.roomEventTypeMessage:
-        return Proto.RoomEventType.roomEventTypeMessage;
+        return proto.RoomEventType.roomEventTypeMessage;
       case RoomEventType.roomEventTypeSystem:
-        return Proto.RoomEventType.roomEventTypeSystem;
+        return proto.RoomEventType.roomEventTypeSystem;
       default:
-        return Proto.RoomEventType.roomEventTypeAll;
+        return proto.RoomEventType.roomEventTypeAll;
     }
   }
 }

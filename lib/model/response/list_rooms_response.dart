@@ -1,17 +1,17 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
 import 'package:sputnikn_chat_client/model/response/base_response.dart';
-import './room_detail.dart';
+import 'package:sputnikn_chat_client/model/response/room_detail.dart';
 
 class ListRoomsResponse extends BaseResponse {
-  final List<RoomDetail> detail;
-
-  ListRoomsResponse({
+  const ListRoomsResponse({
     required this.detail,
   });
 
-  static ListRoomsResponse fromProto(Proto.ListRoomsReply proto) {
+  final List<RoomDetail> detail;
+
+  static ListRoomsResponse fromProto(proto.ListRoomsReply data) {
     return ListRoomsResponse(
-      detail: proto.detail.map((e) => RoomDetail.fromProto(e)).toList(),
+      detail: data.detail.map(RoomDetail.fromProto).toList(),
     );
   }
 }

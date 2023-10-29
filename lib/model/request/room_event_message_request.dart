@@ -1,27 +1,40 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart';
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
 import 'package:sputnikn_chat_client/model/request/base_request.dart';
 
-class RoomEventMessageRequest extends BaseRequest<RoomEventMessage> {
+class RoomEventMessageRequest extends BaseRequest<proto.RoomEventMessage> {
+  const RoomEventMessageRequest({
+    required this.userId,
+    required this.roomId,
+    required this.attachment,
+    required this.content,
+    required this.version,
+    this.clientEventId = -1,
+  });
+
   final String userId;
   final String roomId;
   final List<String> attachment;
   // Important field: will be filled inside Isolate
-  int? clientEventId;
+  final int clientEventId;
   final String content;
   final int version;
 
-  RoomEventMessageRequest({
-    required this.userId,
-    required this.roomId,
-    required this.attachment,
-    this.clientEventId,
-    required this.content,
-    required this.version,
-  });
+  RoomEventMessageRequest copyWith({
+    int? clientEventId,
+  }) {
+    return RoomEventMessageRequest(
+      userId: userId,
+      roomId: roomId,
+      attachment: attachment,
+      clientEventId: clientEventId ?? this.clientEventId,
+      content: content,
+      version: version,
+    );
+  }
 
   @override
-  RoomEventMessage toProto() {
-    return RoomEventMessage(
+  proto.RoomEventMessage toProto() {
+    return proto.RoomEventMessage(
       roomId: roomId,
       attachment: attachment,
       clientEventId: clientEventId,
