@@ -1,6 +1,10 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
+// ignore_for_file: no_default_cases
 
-abstract class BaseResponse {}
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
+
+abstract class BaseResponse {
+  const BaseResponse();
+}
 
 enum ApiResponseError {
   apiResponseErrorNone,
@@ -11,19 +15,19 @@ enum ApiResponseError {
   apiResponseErrorRoomRequiredMinMembers,
 }
 
-ApiResponseError apiResponseErrorFromProto(Proto.ResponseErrorType proto) {
-  switch (proto) {
-    case Proto.ResponseErrorType.responseErrorTypeNone:
+ApiResponseError apiResponseErrorFromProto(proto.ResponseErrorType data) {
+  switch (data) {
+    case proto.ResponseErrorType.responseErrorTypeNone:
       return ApiResponseError.apiResponseErrorNone;
-    case Proto.ResponseErrorType.responseErrorTypeInternalError:
+    case proto.ResponseErrorType.responseErrorTypeInternalError:
       return ApiResponseError.apiResponseErrorInternalError;
-    case Proto.ResponseErrorType.responseErrorTypeUserNeedAuth:
+    case proto.ResponseErrorType.responseErrorTypeUserNeedAuth:
       return ApiResponseError.apiResponseErrorUserNeedAuth;
-    case Proto.ResponseErrorType.responseErrorTypeUserNotFound:
+    case proto.ResponseErrorType.responseErrorTypeUserNotFound:
       return ApiResponseError.apiResponseErrorUserNotFound;
-    case Proto.ResponseErrorType.responseErrorTypeUserWrongPassword:
+    case proto.ResponseErrorType.responseErrorTypeUserWrongPassword:
       return ApiResponseError.apiResponseErrorUserWrongPassword;
-    case Proto.ResponseErrorType.responseErrorTypeRoomRequiredMinMembers:
+    case proto.ResponseErrorType.responseErrorTypeRoomRequiredMinMembers:
       return ApiResponseError.apiResponseErrorRoomRequiredMinMembers;
     default:
       return ApiResponseError.apiResponseErrorNone;
@@ -31,9 +35,13 @@ ApiResponseError apiResponseErrorFromProto(Proto.ResponseErrorType proto) {
 }
 
 class QueueResponse extends BaseResponse {
+  const QueueResponse(
+    this.responseId,
+    this.error,
+    this.data,
+  );
+
   final int responseId;
   final ApiResponseError error;
   final BaseResponse? data;
-
-  QueueResponse(this.responseId, this.error, this.data);
 }

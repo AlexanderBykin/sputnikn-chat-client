@@ -1,15 +1,10 @@
-import 'package:sputnikn_chat_client/database/table/room_member.dart';
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
+// ignore_for_file: no_default_cases
+
+import 'package:sputnikn_chat_client/database/table/tables.dart';
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
 
 class RoomMemberDetail {
-  final String userId;
-  final String fullName;
-  final bool isOnline;
-  final String? avatar;
-  final DateTime? lastReadMarker;
-  final Proto.RoomMemberStatusType memberStatus;
-
-  RoomMemberDetail({
+  const RoomMemberDetail({
     required this.userId,
     required this.fullName,
     required this.isOnline,
@@ -18,52 +13,60 @@ class RoomMemberDetail {
     this.lastReadMarker,
   });
 
-  static RoomMemberDetail fromProto(Proto.RoomMemberDetail proto) {
+  final String userId;
+  final String fullName;
+  final bool isOnline;
+  final String? avatar;
+  final DateTime? lastReadMarker;
+  final proto.RoomMemberStatusType memberStatus;
+
+  static RoomMemberDetail fromProto(proto.RoomMemberDetail data) {
     return RoomMemberDetail(
-      userId: proto.userId,
-      fullName: proto.fullName,
-      isOnline: proto.isOnline,
-      memberStatus: proto.memberStatus,
-      avatar: (proto.hasAvatar()) ? proto.avatar : null,
-      lastReadMarker: (proto.hasLastReadMarker())
-          ? DateTime.fromMillisecondsSinceEpoch(proto.lastReadMarker.toInt())
+      userId: data.userId,
+      fullName: data.fullName,
+      isOnline: data.isOnline,
+      memberStatus: data.memberStatus,
+      avatar: (data.hasAvatar()) ? data.avatar : null,
+      lastReadMarker: (data.hasLastReadMarker())
+          ? DateTime.fromMillisecondsSinceEpoch(data.lastReadMarker.toInt())
           : null,
     );
   }
 
   static MemberStatus protoMemberStatusToDB(
-      Proto.RoomMemberStatusType memberStatus) {
+    proto.RoomMemberStatusType memberStatus,
+  ) {
     switch (memberStatus) {
-      case Proto.RoomMemberStatusType.roomMemberStatusTypeInvited:
+      case proto.RoomMemberStatusType.roomMemberStatusTypeInvited:
         return MemberStatus.memberStatusTypeInvited;
-      case Proto.RoomMemberStatusType.roomMemberStatusTypeJoined:
+      case proto.RoomMemberStatusType.roomMemberStatusTypeJoined:
         return MemberStatus.memberStatusTypeJoined;
-      case Proto.RoomMemberStatusType.roomMemberStatusTypeLeft:
+      case proto.RoomMemberStatusType.roomMemberStatusTypeLeft:
         return MemberStatus.memberStatusTypeLeft;
-      case Proto.RoomMemberStatusType.roomMemberStatusTypeKicked:
+      case proto.RoomMemberStatusType.roomMemberStatusTypeKicked:
         return MemberStatus.memberStatusTypeKicked;
-      case Proto.RoomMemberStatusType.roomMemberStatusTypeBanned:
+      case proto.RoomMemberStatusType.roomMemberStatusTypeBanned:
         return MemberStatus.memberStatusTypeBanned;
       default:
         return MemberStatus.memberStatusTypeInvited;
     }
   }
 
-  static Proto.RoomMemberStatusType dbMemberStatusToProto(
+  static proto.RoomMemberStatusType dbMemberStatusToProto(
       MemberStatus memberStatus) {
     switch (memberStatus) {
       case MemberStatus.memberStatusTypeInvited:
-        return Proto.RoomMemberStatusType.roomMemberStatusTypeInvited;
+        return proto.RoomMemberStatusType.roomMemberStatusTypeInvited;
       case MemberStatus.memberStatusTypeJoined:
-        return Proto.RoomMemberStatusType.roomMemberStatusTypeJoined;
+        return proto.RoomMemberStatusType.roomMemberStatusTypeJoined;
       case MemberStatus.memberStatusTypeLeft:
-        return Proto.RoomMemberStatusType.roomMemberStatusTypeLeft;
+        return proto.RoomMemberStatusType.roomMemberStatusTypeLeft;
       case MemberStatus.memberStatusTypeKicked:
-        return Proto.RoomMemberStatusType.roomMemberStatusTypeKicked;
+        return proto.RoomMemberStatusType.roomMemberStatusTypeKicked;
       case MemberStatus.memberStatusTypeBanned:
-        return Proto.RoomMemberStatusType.roomMemberStatusTypeBanned;
+        return proto.RoomMemberStatusType.roomMemberStatusTypeBanned;
       default:
-        return Proto.RoomMemberStatusType.roomMemberStatusTypeInvited;
+        return proto.RoomMemberStatusType.roomMemberStatusTypeInvited;
     }
   }
 }

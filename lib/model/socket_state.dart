@@ -5,7 +5,7 @@ enum SocketStateType {
 }
 
 class SocketState {
-  final SocketStateType state;
+  const SocketState(this.state);
 
-  SocketState(this.state);
+  final SocketStateType state;
 }

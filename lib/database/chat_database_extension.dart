@@ -1,46 +1,51 @@
-import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
 import 'package:sputnikn_chat_client/database/chat_database.dart';
-import 'package:sputnikn_chat_client/model/response/room_event_system_detail.dart';
+import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
 
 extension ChatDatabaseExtension on ChatDatabase {
   Future<void> storeRoomDetails(List<RoomDetail> details) async {
     final roomsData = details
-        .map((e) => RoomData(
-              id: e.roomId,
-              title: e.title,
-              avatar: e.avatar,
+        .map(
+          (e) => RoomData(
+            id: e.roomId,
+            title: e.title,
+            avatar: e.avatar,
+            dateCreate: DateTime.now(),
+            dateUpdate: DateTime.now(),
+          ),
+        )
+        .toList();
+    await upsertRooms(roomsData);
+    final usersData = details
+        .expand(
+          (room) => room.members.map((member) {
+            return UserData(
+              id: member.userId,
+              fullName: member.fullName,
+              avatar: member.avatar,
               dateCreate: DateTime.now(),
               dateUpdate: DateTime.now(),
-            ))
+            );
+          }),
+        )
         .toList();
-    await this.upsertRooms(roomsData);
-    final usersData = details
-        .expand((room) => room.members.map((member) {
-              return UserData(
-                id: member.userId,
-                fullName: member.fullName,
-                avatar: member.avatar,
-                dateCreate: DateTime.now(),
-                dateUpdate: DateTime.now(),
-              );
-            }))
-        .toList();
-    await this.upsertUsers(usersData);
+    await upsertUsers(usersData);
     final roomMembersData = details
-        .expand((room) => room.members.map((member) {
-              return RoomMemberData(
-                userId: member.userId,
-                roomId: room.roomId,
-                permission: 0,
-                memberStatus:
-                    RoomMemberDetail.protoMemberStatusToDB(member.memberStatus),
-                lastReadMarker: member.lastReadMarker,
-                dateCreate: DateTime.now(),
-                dateUpdate: DateTime.now(),
-              );
-            }))
+        .expand(
+          (room) => room.members.map((member) {
+            return RoomMemberData(
+              userId: member.userId,
+              roomId: room.roomId,
+              permission: 0,
+              memberStatus:
+                  RoomMemberDetail.protoMemberStatusToDB(member.memberStatus),
+              lastReadMarker: member.lastReadMarker,
+              dateCreate: DateTime.now(),
+              dateUpdate: DateTime.now(),
+            );
+          }),
+        )
         .toList();
-    await this.upsertRoomMembers(roomMembersData);
+    await upsertRoomMembers(roomMembersData);
   }
 
   Future<void> storeUsers(List<UserDetail> details) async {
@@ -53,11 +58,12 @@ extension ChatDatabaseExtension on ChatDatabase {
         dateUpdate: DateTime.now(),
       );
     }).toList();
-    await this.upsertUsers(usersData);
+    await upsertUsers(usersData);
   }
 
   Future<void> storeRoomEventMessages(
-      List<RoomEventMessageDetail> details) async {
+    List<RoomEventMessageDetail> details,
+  ) async {
     final events = details.map((e) {
       return RoomEventMessageData(
         id: e.eventId,
@@ -70,11 +76,12 @@ extension ChatDatabaseExtension on ChatDatabase {
         dateEdit: e.updateTimestamp,
       );
     }).toList();
-    await this.upsertEventMessages(events);
+    await upsertEventMessages(events);
   }
 
   Future<void> storeRoomEventSystems(
-      List<RoomEventSystemDetail> details) async {
+    List<RoomEventSystemDetail> details,
+  ) async {
     final events = details.map((e) {
       return RoomEventSystemData(
         id: e.eventId,
@@ -84,6 +91,6 @@ extension ChatDatabaseExtension on ChatDatabase {
         dateCreate: e.createTimestamp,
       );
     }).toList();
-    await this.upsertEventSystems(events);
+    await upsertEventSystems(events);
   }
 }

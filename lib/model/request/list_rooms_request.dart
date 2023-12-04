@@ -1,18 +1,18 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
-import './base_request.dart';
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
+import 'package:sputnikn_chat_client/model/request/base_request.dart';
 
-class ListRoomsRequest extends BaseRequest<Proto.ListRooms> {
-  final String userId;
-  final Set<String> roomIds;
-
-  ListRoomsRequest({
+class ListRoomsRequest extends BaseRequest<proto.ListRooms> {
+  const ListRoomsRequest({
     required this.userId,
     required this.roomIds,
   });
 
+  final String userId;
+  final Set<String> roomIds;
+
   @override
-  Proto.ListRooms toProto() {
-    return Proto.ListRooms(
+  proto.ListRooms toProto() {
+    return proto.ListRooms(
       roomIds: roomIds.toList(),
     );
   }

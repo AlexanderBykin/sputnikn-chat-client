@@ -1,13 +1,7 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
 
 class RoomEventReactionDetail {
-  final String eventId;
-  final String roomId;
-  final String senderId;
-  final String content;
-  final DateTime timestamp;
-
-  RoomEventReactionDetail({
+  const RoomEventReactionDetail({
     required this.eventId,
     required this.roomId,
     required this.senderId,
@@ -15,15 +9,21 @@ class RoomEventReactionDetail {
     required this.timestamp,
   });
 
+  final String eventId;
+  final String roomId;
+  final String senderId;
+  final String content;
+  final DateTime timestamp;
+
   static RoomEventReactionDetail fromProto(
-    Proto.RoomEventReactionDetail proto,
+    proto.RoomEventReactionDetail data,
   ) {
     return RoomEventReactionDetail(
-      eventId: proto.eventId,
-      roomId: proto.roomId,
-      senderId: proto.senderId,
-      content: proto.content,
-      timestamp: DateTime.fromMillisecondsSinceEpoch(proto.timestamp.toInt()),
+      eventId: data.eventId,
+      roomId: data.roomId,
+      senderId: data.senderId,
+      content: data.content,
+      timestamp: DateTime.fromMillisecondsSinceEpoch(data.timestamp.toInt()),
     );
   }
 }

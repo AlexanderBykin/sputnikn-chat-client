@@ -1,13 +1,7 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
 
 class RoomEventSystemDetail {
-  final String eventId;
-  final String roomId;
-  final int version;
-  final String content;
-  final DateTime createTimestamp;
-
-  RoomEventSystemDetail({
+  const RoomEventSystemDetail({
     required this.eventId,
     required this.roomId,
     required this.version,
@@ -15,14 +9,21 @@ class RoomEventSystemDetail {
     required this.createTimestamp,
   });
 
-  static RoomEventSystemDetail fromProto(Proto.RoomEventSystemDetail proto) {
+  final String eventId;
+  final String roomId;
+  final int version;
+  final String content;
+  final DateTime createTimestamp;
+
+  static RoomEventSystemDetail fromProto(proto.RoomEventSystemDetail data) {
     return RoomEventSystemDetail(
-      eventId: proto.eventId,
-      roomId: proto.roomId,
-      version: proto.version,
-      content: proto.content,
-      createTimestamp:
-          DateTime.fromMillisecondsSinceEpoch(proto.createTimestamp.toInt()),
+      eventId: data.eventId,
+      roomId: data.roomId,
+      version: data.version,
+      content: data.content,
+      createTimestamp: DateTime.fromMillisecondsSinceEpoch(
+        data.createTimestamp.toInt(),
+      ),
     );
   }
 }

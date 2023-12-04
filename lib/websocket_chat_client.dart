@@ -1,21 +1,93 @@
 import 'dart:async';
 import 'dart:isolate';
-import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
+
+import 'package:collection/collection.dart';
+import 'package:sputnikn_chat_client/isolated_chat_client_impl.dart';
+import 'package:sputnikn_chat_client/model/request/auth_user_request.dart';
+import 'package:sputnikn_chat_client/model/request/base_request.dart';
 import 'package:sputnikn_chat_client/model/request/create_room_request.dart';
 import 'package:sputnikn_chat_client/model/request/download_media_request.dart';
+import 'package:sputnikn_chat_client/model/request/list_rooms_request.dart';
+import 'package:sputnikn_chat_client/model/request/list_users_request.dart';
+import 'package:sputnikn_chat_client/model/request/room_event_message_request.dart';
+import 'package:sputnikn_chat_client/model/request/sync_rooms_request.dart';
 import 'package:sputnikn_chat_client/model/request/upload_media_request.dart';
-import 'isolated_chat_client_impl.dart';
-import 'model/request/auth_user_request.dart';
-import 'model/request/base_request.dart';
-import 'model/request/list_rooms_request.dart';
-import 'model/request/list_users_request.dart';
-import 'model/request/room_event_message_request.dart';
-import 'model/request/sync_rooms_request.dart';
-import 'model/response/download_media_response.dart';
-import 'model/response/upload_media_response.dart';
-import 'package:collection/collection.dart';
+import 'package:sputnikn_chat_client/model/response/download_media_response.dart';
+import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
 
 class WebsocketChatClient {
+  /// Proxy format: <ip address>:<port>
+  WebsocketChatClient(
+    String chatServer,
+    String mediaServer,
+    String databasePath,
+    String httpProxy,
+  ) {
+    _localReceivePort = ReceivePort();
+    _receiveSubs = _localReceivePort.listen(
+      (dynamic message) {
+        if (message is SendPort) {
+          _remoteSendPort = message;
+          _socketStateSubject.sink
+              .add(SocketState(SocketStateType.socketStateTypeReady));
+        }
+        if (message is QueueResponse) {
+          if (message.data is AuthUserResponse) {
+            _authenticatedUser = (message.data as AuthUserResponse?)?.detail;
+          }
+          final completer = _responseQueue[message.responseId];
+          if (completer != null) {
+            if (message.data == null) {
+              completer.completeError(message.error);
+            } else {
+              completer.complete(message.data);
+            }
+            _responseQueue.remove(message.responseId);
+          } else {
+            // TODO(alexsh): do a mechanism to don't process response when Completer is failed in case of timeout
+            if (message.data != null) {
+              _messageSubject.sink.add(message.data!);
+            }
+          }
+        }
+        if (message is ChatError) {
+          _errorSubject.sink.add(message);
+        }
+        if (message is SocketState) {
+          _socketStateSubject.sink.add(message);
+        }
+      },
+      onError: (Object message, StackTrace stackTrace) {
+        _errorSubject.sink.add(
+          ChatError(
+            message.toString(),
+            stackTrace.toString(),
+          ),
+        );
+      },
+    );
+    Isolate.spawn(
+      IsolatedChatClientImpl.create,
+      [
+        _localReceivePort.sendPort,
+        chatServer,
+        mediaServer,
+        databasePath,
+        httpProxy,
+      ],
+      errorsAreFatal: false,
+    ).then((value) {
+      _isolate = value;
+    }).onError((message, stackTrace) {
+      _errorSubject.sink.add(
+        ChatError(
+          message?.toString() ?? '',
+          stackTrace.toString(),
+        ),
+      );
+    });
+  }
+
   late Isolate _isolate;
   late ReceivePort _localReceivePort;
   static const int _defaultApiRequestTimeout = 3000;
@@ -40,81 +112,16 @@ class WebsocketChatClient {
 
   UserDetail? get authenticatedUser => _authenticatedUser;
 
-  /// Proxy format: <ip address>:<port>
-  WebsocketChatClient(
-    String chatServer,
-    String mediaServer,
-    String databasePath,
-    String httpProxy,
-  ) {
-    _localReceivePort = ReceivePort();
-    _receiveSubs = _localReceivePort.listen((message) {
-      if (message is SendPort) {
-        _remoteSendPort = message;
-        _socketStateSubject.sink
-            .add(SocketState(SocketStateType.socketStateTypeReady));
-      }
-      if (message is QueueResponse) {
-        if (message.data is AuthUserResponse) {
-          _authenticatedUser = (message.data as AuthUserResponse?)?.detail;
-        }
-        final completer = _responseQueue[message.responseId];
-        if (completer != null) {
-          if (message.data == null) {
-            completer.completeError(message.error);
-          } else {
-            completer.complete(message.data);
-          }
-          _responseQueue.remove(message.responseId);
-        } else {
-          // TODO(alexsh): do a mechanism to don't process response when Completer is failed in case of timeout
-          if (message.data != null) {
-            _messageSubject.sink.add(message.data!);
-          }
-        }
-      }
-      if (message is ChatError) {
-        _errorSubject.sink.add(message);
-      }
-      if (message is SocketState) {
-        _socketStateSubject.sink.add(message);
-      }
-    }, onError: (message, stackTrace) {
-      _errorSubject.sink.add(ChatError(
-        message.toString(),
-        stackTrace.toString(),
-      ));
-    });
-    Isolate.spawn(
-      IsolatedChatClientImpl.create,
-      [
-        _localReceivePort.sendPort,
-        chatServer,
-        mediaServer,
-        databasePath,
-        httpProxy,
-      ],
-      errorsAreFatal: false,
-    ).then((value) {
-      _isolate = value;
-    }).onError((message, stackTrace) {
-      _errorSubject.sink.add(ChatError(
-        message?.toString() ?? "",
-        stackTrace.toString(),
-      ));
-    });
-  }
-
   void connect() {
-    _remoteSendPort?.send("connect");
+    _remoteSendPort?.send('connect');
   }
 
   void disconnect() {
-    _remoteSendPort?.send("stop");
+    _remoteSendPort?.send('stop');
     _remoteSendPort = null;
     _receiveSubs?.cancel();
     _localReceivePort.close();
-    _isolate.kill(priority: Isolate.beforeNextEvent);
+    _isolate.kill();
     _messageSubject.close();
     _errorSubject.close();
     _socketStateSubject.close();
@@ -142,7 +149,7 @@ class WebsocketChatClient {
       Duration(milliseconds: timeoutMillis),
       onTimeout: () {
         return Future.error(
-          _failCompleterResult(reqId, "Auth user timeout"),
+          _failCompleterResult(reqId, 'Auth user timeout'),
           StackTrace.current,
         );
       },
@@ -173,7 +180,7 @@ class WebsocketChatClient {
       Duration(milliseconds: timeoutMillis),
       onTimeout: () {
         return Future.error(
-          _failCompleterResult(reqId, "Create room timeout"),
+          _failCompleterResult(reqId, 'Create room timeout'),
           StackTrace.current,
         );
       },
@@ -191,7 +198,7 @@ class WebsocketChatClient {
     final request = QueueRequest(
       reqId,
       ListRoomsRequest(
-        userId: _authenticatedUser?.userId ?? "",
+        userId: _authenticatedUser?.userId ?? '',
         roomIds: roomIds,
       ),
       isOffline,
@@ -201,7 +208,7 @@ class WebsocketChatClient {
       Duration(milliseconds: timeoutMillis),
       onTimeout: () {
         return Future.error(
-          _failCompleterResult(reqId, "List rooms timeout"),
+          _failCompleterResult(reqId, 'List rooms timeout'),
           StackTrace.current,
         );
       },
@@ -225,7 +232,7 @@ class WebsocketChatClient {
       Duration(milliseconds: timeoutMillis),
       onTimeout: () {
         return Future.error(
-          _failCompleterResult(reqId, "List users timeout"),
+          _failCompleterResult(reqId, 'List users timeout'),
           StackTrace.current,
         );
       },
@@ -245,7 +252,7 @@ class WebsocketChatClient {
     _responseQueue.putIfAbsent(reqId, () => completer);
     try {
       if (_authenticatedUser == null) {
-        throw Exception("User not authorized.");
+        throw Exception('User not authorized.');
       }
       final request = QueueRequest(
         reqId,
@@ -266,7 +273,7 @@ class WebsocketChatClient {
       Duration(milliseconds: timeoutMillis),
       onTimeout: () {
         return Future.error(
-          _failCompleterResult(reqId, "Add room event message timeout"),
+          _failCompleterResult(reqId, 'Add room event message timeout'),
           StackTrace.current,
         );
       },
@@ -291,7 +298,7 @@ class WebsocketChatClient {
       Duration(milliseconds: timeoutMillis),
       onTimeout: () {
         return Future.error(
-          _failCompleterResult(reqId, "Sync rooms timeout"),
+          _failCompleterResult(reqId, 'Sync rooms timeout'),
           StackTrace.current,
         );
       },
@@ -306,7 +313,7 @@ class WebsocketChatClient {
     final completer = Completer<UploadMediaResponse>();
     try {
       if (_authenticatedUser == null) {
-        throw Exception("User not authorized.");
+        throw Exception('User not authorized.');
       }
       _responseQueue.putIfAbsent(reqId, () => completer);
       final request = QueueRequest(
@@ -325,7 +332,7 @@ class WebsocketChatClient {
       Duration(milliseconds: timeoutMillis),
       onTimeout: () {
         return Future.error(
-          _failCompleterResult(reqId, "Upload media timeout"),
+          _failCompleterResult(reqId, 'Upload media timeout'),
           StackTrace.current,
         );
       },
@@ -340,7 +347,7 @@ class WebsocketChatClient {
     final completer = Completer<DownloadMediaResponse>();
     try {
       if (_authenticatedUser == null) {
-        throw Exception("User not authorized.");
+        throw Exception('User not authorized.');
       }
       _responseQueue.putIfAbsent(reqId, () => completer);
       final request = QueueRequest(
@@ -359,7 +366,7 @@ class WebsocketChatClient {
       Duration(milliseconds: timeoutMillis),
       onTimeout: () {
         return Future.error(
-          _failCompleterResult(reqId, "Download media timeout"),
+          _failCompleterResult(reqId, 'Download media timeout'),
           StackTrace.current,
         );
       },
@@ -372,12 +379,13 @@ class WebsocketChatClient {
     final completer = Completer<SyncRoomsResponse>();
     try {
       if (_authenticatedUser == null) {
-        throw Exception("User not authorized.");
+        throw Exception('User not authorized.');
       }
       final rooms = await listRooms({});
       final syncFilter = rooms.detail.map((room) {
         final member = room.members.firstWhereOrNull(
-            (member) => member.userId == _authenticatedUser!.userId);
+          (member) => member.userId == _authenticatedUser!.userId,
+        );
         final sinceFilter = (member?.lastReadMarker != null)
             ? SinceTimeFilter(
                 sinceTime: member!.lastReadMarker!,
@@ -400,7 +408,7 @@ class WebsocketChatClient {
       Duration(milliseconds: timeoutMillis),
       onTimeout: () {
         return Future.error(
-          Exception("SmartSyncRooms timeout"),
+          Exception('SmartSyncRooms timeout'),
           StackTrace.current,
         );
       },

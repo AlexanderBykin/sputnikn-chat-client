@@ -1,37 +1,39 @@
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as Proto;
-import 'package:sputnikn_chat_client/model/request_proto_mixin.dart';
+// ignore_for_file: no_default_cases
+
 import 'package:fixnum/fixnum.dart' as $fixnum;
+import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
+import 'package:sputnikn_chat_client/model/request_proto_mixin.dart';
 
 enum SinceTimeOrderType {
   sinceTimeOrderTypeNewest,
   sinceTimeOrderTypeOldest,
 }
 
-class SinceTimeFilter with RequestProtoMixin<Proto.SinceTimeFilter> {
-  final DateTime sinceTime;
-  final SinceTimeOrderType orderType;
-
-  SinceTimeFilter({
+class SinceTimeFilter with RequestProtoMixin<proto.SinceTimeFilter> {
+  const SinceTimeFilter({
     required this.sinceTime,
     required this.orderType,
   });
 
+  final DateTime sinceTime;
+  final SinceTimeOrderType orderType;
+
   @override
-  Proto.SinceTimeFilter toProto() {
-    return Proto.SinceTimeFilter(
+  proto.SinceTimeFilter toProto() {
+    return proto.SinceTimeFilter(
       sinceTimestamp: $fixnum.Int64(sinceTime.millisecondsSinceEpoch),
       orderType: orderTypeToProto(),
     );
   }
 
-  Proto.SinceTimeOrderType orderTypeToProto() {
+  proto.SinceTimeOrderType orderTypeToProto() {
     switch (orderType) {
       case SinceTimeOrderType.sinceTimeOrderTypeNewest:
-        return Proto.SinceTimeOrderType.sinceTimeOrderTypeNewest;
+        return proto.SinceTimeOrderType.sinceTimeOrderTypeNewest;
       case SinceTimeOrderType.sinceTimeOrderTypeOldest:
-        return Proto.SinceTimeOrderType.sinceTimeOrderTypeOldest;
+        return proto.SinceTimeOrderType.sinceTimeOrderTypeOldest;
       default:
-        return Proto.SinceTimeOrderType.sinceTimeOrderTypeNewest;
+        return proto.SinceTimeOrderType.sinceTimeOrderTypeNewest;
     }
   }
 }
