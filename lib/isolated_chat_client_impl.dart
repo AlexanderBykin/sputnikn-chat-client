@@ -5,127 +5,111 @@ import 'dart:isolate';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:http_parser/http_parser.dart';
+import 'package:grpc/grpc.dart';
+import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart' as mime;
+import 'package:protobuf/protobuf.dart';
 import 'package:sputnikn_chat_client/api/api_client.dart';
+import 'package:sputnikn_chat_client/common/extensions/extensions.dart';
 import 'package:sputnikn_chat_client/database/chat_database.dart';
 import 'package:sputnikn_chat_client/database/chat_database_extension.dart';
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
-import 'package:sputnikn_chat_client/generated/serializer.dart';
-import 'package:sputnikn_chat_client/model/request/base_request.dart';
-import 'package:sputnikn_chat_client/model/request/download_media_request.dart';
-import 'package:sputnikn_chat_client/model/request/list_rooms_request.dart';
-import 'package:sputnikn_chat_client/model/request/room_event_message_request.dart';
-import 'package:sputnikn_chat_client/model/request/upload_media_request.dart';
-import 'package:sputnikn_chat_client/model/response/download_media_response.dart';
-import 'package:sputnikn_chat_client/serializer_base.dart';
+import 'package:sputnikn_chat_client/generated/contract.pbgrpc.dart';
 import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
 import 'package:sputnikn_chat_client/sputnikn_http_overrides.dart';
+import 'package:uuid/uuid.dart';
+
+class IsolatedChatClientArgs {
+  const IsolatedChatClientArgs(
+    this.databasePath,
+    this.remoteSendPort,
+    this.chatServerHost,
+    this.chatServerPort,
+    this.mediaServer,
+    this.httpProxy,
+  );
+
+  final String databasePath;
+  final SendPort remoteSendPort;
+  final String chatServerHost;
+  final int chatServerPort;
+  final String mediaServer;
+  final String httpProxy;
+}
 
 class IsolatedChatClientImpl {
   IsolatedChatClientImpl._(
     this.remoteSendPort,
-    this.chatServer,
+    this.chatServerHost,
+    this.chatServerPort,
     this.mediaServer,
     String databasePath,
     this.httpProxy,
   ) {
     HttpOverrides.global = SputniknHttpOverrides(httpProxy);
-    _serializer = Serializer();
     _mediaService = ApiClient(Dio(BaseOptions(baseUrl: mediaServer)));
     _database = ChatDatabase(NativeDatabase(File(databasePath)));
+    final channel = ClientChannel(
+      chatServerHost,
+      port: chatServerPort,
+      options: ChannelOptions(
+        credentials: const ChannelCredentials.insecure(),
+        codecRegistry: CodecRegistry(
+          codecs: const [GzipCodec(), IdentityCodec()],
+        ),
+      ),
+    );
+    _chatClient = ChatServiceClient(channel);
   }
 
-  WebSocket? _webSocket;
   final SendPort remoteSendPort;
-  final String chatServer;
+  final String chatServerHost;
+  final int chatServerPort;
   final String mediaServer;
   final String httpProxy;
-  StreamSubscription? _socketSubs;
-  late SerializerBase _serializer;
+  final _uuid = const Uuid();
   late ChatDatabase _database;
   late ApiClient _mediaService;
-  final int reconnectTimeoutMillis = 3000;
+  late ChatServiceClient _chatClient;
   final _defaultMimeType = 'application/octet-stream';
 
-  static void create(List args) {
-    final remoteSendPort = args[0] as SendPort;
-    final chatServer = args[1] as String;
-    final mediaServer = args[2] as String;
-    final databasePath = args[3] as String;
-    final httpProxy = args[4] as String;
-    final _receivePort = ReceivePort();
-    late StreamSubscription receiveSubs;
+  static void create(IsolatedChatClientArgs args) {
+    final receivePort = ReceivePort();
+    late StreamSubscription<dynamic> receiveSubs;
     final client = IsolatedChatClientImpl._(
-      remoteSendPort,
-      chatServer,
-      mediaServer,
-      databasePath,
-      httpProxy,
+      args.remoteSendPort,
+      args.chatServerHost,
+      args.chatServerPort,
+      args.mediaServer,
+      args.databasePath,
+      args.httpProxy,
     );
-    remoteSendPort.send(_receivePort.sendPort);
-    receiveSubs = _receivePort.listen((dynamic message) async {
+    args.remoteSendPort.send(receivePort.sendPort);
+    receiveSubs = receivePort.listen((dynamic message) async {
       try {
         if (message == 'connect') {
-          await client.connect();
+          // TODO: removed as unnecessary
         } else if (message == 'stop') {
-          remoteSendPort
-              .send(SocketState(SocketStateType.socketStateTypeDisconnected));
+          receivePort.close();
           await receiveSubs.cancel();
-          _receivePort.close();
-          client.disconnect();
+          await client.close();
         } else if (message is QueueRequest) {
-          if (message.request is UploadMediaRequest ||
-              message.request is DownloadMediaRequest) {
+          if (message.data is UploadMediaRequest || message.data is DownloadMediaRequest) {
             await client.processMediaRequest(message);
-          } else if (message.isOffline) {
-            await client.processOfflineRequest(message);
           } else {
-            await client.processOnlineRequest(message);
+            await client.processRequest(message);
           }
         } else {
           throw Exception("Received unknown message '${message.runtimeType}'");
         }
       } catch (error, stack) {
-        remoteSendPort.send(
-          ChatError(
-            error.toString(),
-            stack.toString(),
-          ),
-        );
+        args.remoteSendPort.send(ChatError(error.toString(), stack.toString()));
       }
     });
   }
 
-  Future<bool> connect() async {
-    final _completer = Completer<bool>();
-    try {
-      _webSocket = await WebSocket.connect(chatServer);
-      _socketSubs = _webSocket?.listen(processResponse);
-      remoteSendPort
-          .send(SocketState(SocketStateType.socketStateTypeConnected));
-      _completer.complete(true);
-    } catch (error, stack) {
-      await _socketSubs?.cancel();
-      remoteSendPort.send(
-        ChatError(
-          error.toString(),
-          stack.toString(),
-        ),
-      );
-      disconnect();
-      Future.delayed(
-        Duration(milliseconds: reconnectTimeoutMillis),
-        connect,
-      );
-      _completer.complete(false);
-    }
-    return _completer.future;
-  }
-
   Future<void> processMediaRequest(QueueRequest request) async {
-    if (request.request is UploadMediaRequest) {
-      final uploadRequest = request.request as UploadMediaRequest;
+    if (request.data is UploadMediaRequest) {
+      final uploadRequest = request.data as UploadMediaRequest;
       final result = await _uploadMediaContent(
         uploadRequest.userId,
         uploadRequest.files.map((e) {
@@ -135,194 +119,161 @@ class IsolatedChatClientImpl {
           );
           return MultipartFile.fromBytes(
             e.bytes,
-            contentType:
-                MediaType.parse(e.contentType ?? mediaType ?? _defaultMimeType),
+            contentType: http.MediaType.parse(e.contentType ?? mediaType ?? _defaultMimeType),
             filename: 'MediaFile_${DateTime.now().millisecondsSinceEpoch}',
           );
         }).toList(),
       );
-      remoteSendPort.send(
-        QueueResponse(
-          request.queueId,
-          ApiResponseError.apiResponseErrorNone,
-          result,
-        ),
-      );
+      remoteSendPort.send(QueueResponse.success(request.queueId, result));
     }
-    if (request.request is DownloadMediaRequest) {
-      final downloadRequest = request.request as DownloadMediaRequest;
+    if (request.data is DownloadMediaRequest) {
+      final downloadRequest = request.data as DownloadMediaRequest;
       final result = await _downloadMediaContent(
         downloadRequest.userId,
         downloadRequest.contentId,
       );
-      remoteSendPort.send(
-        QueueResponse(
-          request.queueId,
-          ApiResponseError.apiResponseErrorNone,
-          result,
-        ),
-      );
+      remoteSendPort.send(QueueResponse.success(request.queueId, result));
     }
   }
 
-  Future<void> processOnlineRequest(QueueRequest request) async {
-    final modifiedRequest = await _storeRequestToDatabase(request.request);
-    final message = modifiedRequest.toProto();
-    final msgId = _serializer.messageToId(message);
-    if (msgId <= 0) {
-      throw Exception(
-        "Can't detect msgId for message '${request.request.runtimeType}'",
-      );
+  Future<void> processRequest(QueueRequest request) async {
+    await _storeRequestToDatabase(request.data);
+    GeneratedMessage? response;
+    if (request.data is AuthUserRequest) {
+      response = await _chatClient.authUser(request.data as AuthUserRequest);
     }
-    final result = proto.TransportRequest(
-      requestId: request.queueId,
-      msgId: msgId,
-      data: message.writeToBuffer(),
-    );
-    _webSocket?.add(result.writeToBuffer());
-  }
-
-  Future<void> processOfflineRequest(QueueRequest request) async {
-    if (request.request is ListRoomsRequest) {
-      final data = request.request as ListRoomsRequest;
-      final _rooms =
-          await _database.getUserRoomsAsRoomDetail(data.userId, data.roomIds);
-      remoteSendPort.send(
-        QueueResponse(
-          request.queueId,
-          ApiResponseError.apiResponseErrorNone,
-          ListRoomsResponse(detail: _rooms),
-        ),
-      );
+    if (request.data is ListUsersRequest) {
+      final data = request.data as ListUsersRequest;
+      if (request.isOffline) {
+        //
+      } else {
+        response = await _chatClient.listUsers(data);
+      }
     }
-    if (request.request is RoomEventMessageRequest) {
-      final data = request.request as RoomEventMessageRequest;
-      final nextGeneratedMessageId =
-          await _database.getNextGeneratedEventMessageId(data.userId);
-      final dateCreation = DateTime.now();
-      await _database.upsertEventMessage(
-        RoomEventMessageData(
-          id: nextGeneratedMessageId.toString(),
-          roomId: data.roomId,
-          userId: data.userId,
-          content: data.content,
-          version: data.version,
-          clientEventId: nextGeneratedMessageId,
-          dateCreate: dateCreation,
-          dateEdit: dateCreation,
-        ),
-      );
-      // TODO(alexsh): what should we do with attachments?
-      remoteSendPort.send(
-        QueueResponse(
-          request.queueId,
-          ApiResponseError.apiResponseErrorNone,
-          RoomEventMessageResponse(
-            detail: RoomEventMessageDetail(
-              eventId: nextGeneratedMessageId.toString(),
-              roomId: data.roomId,
-              senderId: data.userId,
-              clientEventId: nextGeneratedMessageId,
-              version: data.version,
-              attachment: [],
-              reaction: [],
-              content: data.content,
-              createTimestamp: dateCreation,
-              updateTimestamp: dateCreation,
-            ),
+    if (request.data is ListRoomsRequest) {
+      final data = request.data as ListRoomsRequest;
+      if (request.isOffline) {
+        final rooms = await _database.getUserRoomsAsRoomDetail(data.userId, data.roomIds.toSet());
+        remoteSendPort.send(QueueResponse.success(request.queueId, ListRoomsResponse(detail: rooms)));
+      } else {
+        response = await _chatClient.listRooms(data);
+      }
+    }
+    if (request.data is SyncRoomsRequest) {
+      final data = request.data as SyncRoomsRequest;
+      if (request.isOffline) {
+        //
+      } else {
+        response = await _chatClient.syncRooms(data);
+      }
+    }
+    if (request.data is RoomReadMarkerRequest) {
+      final data = request.data as RoomReadMarkerRequest;
+      if (request.isOffline) {
+        //
+      } else {
+        response = await _chatClient.setRoomReadMarker(data);
+      }
+    }
+    if (request.data is CreateRoomRequest) {
+      final data = request.data as CreateRoomRequest;
+      if (request.isOffline) {
+        //
+      } else {
+        response = await _chatClient.createRoom(data);
+      }
+    }
+    if (request.data is InviteRoomMemberRequest) {
+      final data = request.data as InviteRoomMemberRequest;
+      if (request.isOffline) {
+        //
+      } else {
+        response = await _chatClient.inviteRoomMember(data);
+      }
+    }
+    if (request.data is RemoveRoomMemberRequest) {
+      final data = request.data as RemoveRoomMemberRequest;
+      if (request.isOffline) {
+        //
+      } else {
+        response = await _chatClient.removeRoomMember(data);
+      }
+    }
+    if (request.data is RoomEventMessageRequest) {
+      final data = request.data as RoomEventMessageRequest;
+      if (request.isOffline) {
+        final dateCreation = DateTime.now();
+        await _database.upsertEventMessage(
+          RoomEventMessageData(
+            id: _uuid.v4(),
+            roomId: data.roomId,
+            userId: data.userId,
+            content: data.content,
+            version: data.version,
+            dateCreate: dateCreation,
+            dateEdit: dateCreation,
           ),
-        ),
-      );
-    }
-    // implement other type of Requests
-  }
-
-  Future processResponse(dynamic response) async {
-    try {
-      if (response is Uint8List) {
-        final transport = proto.TransportResponse.fromBuffer(response);
-        final msgId = transport.msgId;
-        if (msgId <= 0 &&
-            transport.errorType ==
-                proto.ResponseErrorType.responseErrorTypeNone) return;
-        BaseResponse? result;
-        final protoMsg = _serializer.bytesToMessage(msgId, transport.data);
-        if (protoMsg != null) {
-          if (protoMsg is proto.AuthUserReply) {
-            final authResponse = AuthUserResponse.fromProto(protoMsg);
-            result = authResponse;
-          } else if (protoMsg is proto.ListRoomsReply) {
-            result = ListRoomsResponse.fromProto(protoMsg);
-          } else if (protoMsg is proto.ListUsersReply) {
-            result = ListUsersResponse.fromProto(protoMsg);
-          } else if (protoMsg is proto.RoomEventMessageReply) {
-            result = RoomEventMessageResponse.fromProto(protoMsg);
-            // TODO(alexsh): find last user added message and change EventId and also attachments
-          } else if (protoMsg is proto.RoomEventReactionReply) {
-            result = RoomEventReactionResponse.fromProto(protoMsg);
-          } else if (protoMsg is proto.SyncRoomsReply) {
-            result = SyncRoomsResponse.fromProto(protoMsg);
-          } else if (protoMsg is proto.CreateRoomReply) {
-            result = CreateRoomResponse.fromProto(protoMsg);
-          } else if (protoMsg is proto.RoomStateChangedReply) {
-            result = RoomStateChangedResponse.fromProto(protoMsg);
-          } else {
-            print('>>> [$runtimeType] unhandled msgId=$msgId');
-          }
-        }
-        await _storeResponseToDatabase(result);
+        );
+        // TODO(alexsh): what should we do with attachments?
         remoteSendPort.send(
-          QueueResponse(
-            transport.responseId,
-            apiResponseErrorFromProto(transport.errorType),
-            result,
+          QueueResponse.success(
+            request.queueId,
+            RoomEventMessageResponse(
+              detail: RoomEventMessageDetail(
+                eventId: _uuid.v4(),
+                roomId: data.roomId,
+                senderId: data.userId,
+                version: data.version,
+                attachment: [],
+                reaction: [],
+                content: data.content,
+                createdAt: dateCreation.toTimestamp(),
+                updatedAt: dateCreation.toTimestamp(),
+              ),
+            ),
           ),
         );
       } else {
-        print('>>> [$runtimeType] received unhandled $response');
+        response = await _chatClient.addRoomMessage(data);
       }
-    } catch (e, stackTrace) {
-      remoteSendPort.send(
-        ChatError(
-          e.toString(),
-          stackTrace.toString(),
-        ),
-      );
+    }
+    if (request.data is RoomEventMessageReactionRequest) {
+      final data = request.data as RoomEventMessageReactionRequest;
+      if (request.isOffline) {
+        //
+      } else {
+        response = await _chatClient.addRoomMessageReaction(data);
+      }
+    }
+    if (response != null) {
+      await _storeResponseToDatabase(response);
+      remoteSendPort.send(QueueResponse.success(request.queueId, response));
     }
   }
 
-  void disconnect() {
-    remoteSendPort.send(
-      const SocketState(SocketStateType.socketStateTypeDisconnected),
-    );
-    _webSocket?.close(WebSocketStatus.goingAway);
-    _database.close();
+  Future<void> close() async {
+    // TODO: how to disconnect client?
+    await _database.close();
   }
 
-  Future<BaseRequest> _storeRequestToDatabase(BaseRequest request) async {
+  Future<Object> _storeRequestToDatabase(Object request) async {
     if (request is RoomEventMessageRequest) {
-      final clientEventId =
-          await _database.getNextGeneratedEventMessageId(request.userId);
       await _database.upsertEventMessage(
         RoomEventMessageData(
-          id: clientEventId.toString(),
+          id: _uuid.v4(),
           userId: request.userId,
           roomId: request.roomId,
           content: request.content,
           version: request.version,
-          clientEventId: clientEventId,
           dateCreate: DateTime.now(),
           dateEdit: DateTime.now(),
         ),
-      );
-      return request.copyWith(
-        clientEventId: clientEventId,
       );
     }
     return request;
   }
 
-  Future<void> _storeResponseToDatabase(BaseResponse? response) async {
+  Future<void> _storeResponseToDatabase(GeneratedMessage? response) async {
     if (response is ListUsersResponse) {
       await _database.storeUsers(response.users);
     }
@@ -335,8 +286,19 @@ class IsolatedChatClientImpl {
     if (response is RoomEventMessageResponse) {
       await _database.storeRoomEventMessages([response.detail]);
     }
-    if (response is RoomEventSystemResponse) {
-      await _database.storeRoomEventSystems([response.detail]);
+    if (response is RoomEventResponse) {
+      if (response.hasMessageEvent()) {
+        await _database.storeRoomEventMessages([response.messageEvent]);
+      }
+      if (response.hasMessageEventReaction()) {
+        //
+      }
+      if (response.hasSystemEvent()) {
+        await _database.storeRoomEventSystems([response.systemEvent]);
+      }
+      if (response.hasRoomStateChanged()) {
+        await _database.storeRoomDetails([response.roomStateChanged]);
+      }
     }
     if (response is RoomStateChangedResponse) {
       await _database.storeRoomDetails([response.detail]);
@@ -345,8 +307,6 @@ class IsolatedChatClientImpl {
       await _database.storeRoomEventMessages(response.messageEvents);
       await _database.storeRoomEventSystems(response.systemEvents);
     }
-
-    return Future.value();
   }
 
   Future<DownloadMediaResponse> _downloadMediaContent(
@@ -356,8 +316,7 @@ class IsolatedChatClientImpl {
     return _mediaService.download(userId, contentId).then((value) {
       return DownloadMediaResponse(
         content: MediaContent(
-          contentType:
-              (value.response.headers[HttpHeaders.contentTypeHeader]!).first,
+          contentType: (value.response.headers[HttpHeaders.contentTypeHeader]!).first,
           bytes: value.data,
         ),
       );
@@ -370,8 +329,7 @@ class IsolatedChatClientImpl {
   ) {
     return _mediaService.upload(userId, files).then((value) {
       final dynamic tmpMediaIds = value.data.data['attachments'];
-      final mediaIds =
-          (tmpMediaIds is List) ? tmpMediaIds.cast<String>() : <String>[];
+      final mediaIds = (tmpMediaIds is List) ? tmpMediaIds.cast<String>() : <String>[];
       return UploadMediaResponse(
         mediaIds: mediaIds,
       );

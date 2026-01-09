@@ -1,5 +1,8 @@
 import 'package:drift/drift.dart';
+import 'package:sputnikn_chat_client/common/extensions/extensions.dart';
+import 'package:sputnikn_chat_client/common/utils/src/member_status_util.dart';
 import 'package:sputnikn_chat_client/database/table/tables.dart';
+import 'package:sputnikn_chat_client/generated/contract.pb.dart';
 import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
 
 part 'chat_database.g.dart';
@@ -15,13 +18,9 @@ part 'chat_database.g.dart';
     User,
     UserPush,
   ],
-  queries: {
-    'lastGeneratedEventMessageId':
-        'select max(client_event_id) from room_event_message where user_id=:userId;',
-  },
 )
 class ChatDatabase extends _$ChatDatabase {
-  ChatDatabase(super.delegate);
+  ChatDatabase(super.e);
 
   @override
   int get schemaVersion => 1;
@@ -30,16 +29,13 @@ class ChatDatabase extends _$ChatDatabase {
     String userId,
     Set<String> roomIds,
   ) async {
-    final query = select(room).join([
-      innerJoin(roomMember, roomMember.roomId.equalsExp(room.id)),
-      innerJoin(user, roomMember.userId.equalsExp(user.id)),
-    ])
-      ..where(
-        user.id.equals(userId) &
-            (roomIds.isNotEmpty
-                ? room.id.isIn(roomIds)
-                : const Variable(1).equals(1)),
-      );
+    final query =
+        select(room).join([
+          innerJoin(roomMember, roomMember.roomId.equalsExp(room.id)),
+          innerJoin(user, roomMember.userId.equalsExp(user.id)),
+        ])..where(
+          user.id.equals(userId) & (roomIds.isNotEmpty ? room.id.isIn(roomIds) : const Variable(1).equals(1)),
+        );
     return query.get().then((value) {
       return value.map((e) => e.readTable<Room, RoomData>(room)).toList();
     });
@@ -49,8 +45,7 @@ class ChatDatabase extends _$ChatDatabase {
     final query = select(user, distinct: true).join([
       innerJoin(roomMember, roomMember.userId.equalsExp(user.id)),
       innerJoin(room, roomMember.roomId.equalsExp(room.id)),
-    ])
-      ..where(room.id.isIn(roomIds));
+    ])..where(room.id.isIn(roomIds));
     return query.get().then((value) {
       return value.map((e) => e.readTable<User, UserData>(user)).toList();
     });
@@ -61,10 +56,8 @@ class ChatDatabase extends _$ChatDatabase {
     Set<String> roomIds,
   ) async {
     final userRooms = await getUserRooms(userId, roomIds);
-    final usersByRooms =
-        await getUsersByRooms(userRooms.map((e) => e.id).toSet());
-    final roomMembers =
-        await getRoomMembersByRooms(userRooms.map((e) => e.id).toSet());
+    final usersByRooms = await getUsersByRooms(userRooms.map((e) => e.id).toSet());
+    final roomMembers = await getRoomMembersByRooms(userRooms.map((e) => e.id).toSet());
 
     return userRooms.map((room) {
       return RoomDetail(
@@ -73,23 +66,22 @@ class ChatDatabase extends _$ChatDatabase {
         avatar: room.avatar,
         members: roomMembers
             .where(
-          (roomMember) => usersByRooms.any((user) {
-            return roomMember.roomId == room.id && roomMember.userId == user.id;
-          }),
-        )
+              (roomMember) => usersByRooms.any((user) {
+                return roomMember.roomId == room.id && roomMember.userId == user.id;
+              }),
+            )
             .map((roomMember) {
-          final user =
-              usersByRooms.firstWhere((user) => user.id == roomMember.userId);
-          return RoomMemberDetail(
-            userId: user.id,
-            fullName: user.fullName,
-            isOnline: false,
-            memberStatus:
-                RoomMemberDetail.dbMemberStatusToProto(roomMember.memberStatus),
-            avatar: user.avatar,
-            lastReadMarker: roomMember.lastReadMarker,
-          );
-        }).toList(),
+              final user = usersByRooms.firstWhere((user) => user.id == roomMember.userId);
+              return RoomMemberDetail(
+                userId: user.id,
+                fullName: user.fullName,
+                isOnline: false,
+                memberStatus: MemberStatusUtil.toProto(roomMember.memberStatus),
+                avatar: user.avatar,
+                lastReadMarker: roomMember.lastReadMarker?.toTimestamp(),
+              );
+            })
+            .toList(),
         eventMessageUnreadCount: 0,
         eventSystemUnreadCount: 0,
       );
@@ -123,12 +115,9 @@ class ChatDatabase extends _$ChatDatabase {
   Future<List<RoomMemberData>> getRoomMembersByRooms(Set<String> roomIds) {
     final query = select(roomMember).join([
       innerJoin(room, roomMember.roomId.equalsExp(room.id)),
-    ])
-      ..where(room.id.isIn(roomIds));
+    ])..where(room.id.isIn(roomIds));
     return query.get().then((value) {
-      return value
-          .map((e) => e.readTable<RoomMember, RoomMemberData>(roomMember))
-          .toList();
+      return value.map((e) => e.readTable<RoomMember, RoomMemberData>(roomMember)).toList();
     });
   }
 
@@ -143,10 +132,7 @@ class ChatDatabase extends _$ChatDatabase {
   }
 
   Future<int> deleteRoomMember(RoomMemberData data) {
-    return (delete(roomMember)
-          ..where((t) =>
-              t.roomId.equals(data.roomId) & t.userId.equals(data.userId)))
-        .go();
+    return (delete(roomMember)..where((t) => t.roomId.equals(data.roomId) & t.userId.equals(data.userId))).go();
   }
 
   Future<int> upsertEventMessage(RoomEventMessageData data) {
@@ -161,12 +147,6 @@ class ChatDatabase extends _$ChatDatabase {
 
   Future<int> deleteEventMessage(RoomEventMessageData data) {
     return (delete(roomEventMessage)..where((t) => t.id.equals(data.id))).go();
-  }
-
-  Future<int> getNextGeneratedEventMessageId(String userId) {
-    return lastGeneratedEventMessageId(userId)
-        .getSingleOrNull()
-        .then((value) => (value ?? 0) + 1);
   }
 
   Future<void> upsertEventSystems(List<RoomEventSystemData> data) {

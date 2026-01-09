@@ -1,3 +1,4 @@
+import 'package:sputnikn_chat_client/common/utils/src/member_status_util.dart';
 import 'package:sputnikn_chat_client/database/chat_database.dart';
 import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
 
@@ -36,9 +37,8 @@ extension ChatDatabaseExtension on ChatDatabase {
               userId: member.userId,
               roomId: room.roomId,
               permission: 0,
-              memberStatus:
-                  RoomMemberDetail.protoMemberStatusToDB(member.memberStatus),
-              lastReadMarker: member.lastReadMarker,
+              memberStatus: MemberStatusUtil.fromProto(member.memberStatus),
+              lastReadMarker: member.lastReadMarker.toDateTime(),
               dateCreate: DateTime.now(),
               dateUpdate: DateTime.now(),
             );
@@ -71,9 +71,8 @@ extension ChatDatabaseExtension on ChatDatabase {
         userId: e.senderId,
         content: e.content,
         version: e.version,
-        clientEventId: e.clientEventId,
-        dateCreate: e.createTimestamp,
-        dateEdit: e.updateTimestamp,
+        dateCreate: e.createdAt.toDateTime(),
+        dateEdit: e.updatedAt.toDateTime(),
       );
     }).toList();
     await upsertEventMessages(events);
@@ -88,7 +87,7 @@ extension ChatDatabaseExtension on ChatDatabase {
         roomId: e.roomId,
         version: e.version,
         content: e.content,
-        dateCreate: e.createTimestamp,
+        dateCreate: e.createdAt.toDateTime(),
       );
     }).toList();
     await upsertEventSystems(events);

@@ -1,9 +1,9 @@
-class ChatError {
-  const ChatError(
+class ChatError extends Error {
+  ChatError(
     this.message,
-    this.stackTrace,
+    this.stackTraceString,
   );
 
   final String message;
-  final String stackTrace;
+  final String stackTraceString;
 }

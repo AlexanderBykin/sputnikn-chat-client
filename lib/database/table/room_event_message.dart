@@ -7,7 +7,6 @@ class RoomEventMessage extends Table {
   TextColumn get userId => text().references(User, #id)();
   TextColumn get content => text()();
   IntColumn get version => integer()();
-  IntColumn get clientEventId => integer().nullable()();
   DateTimeColumn get dateCreate => dateTime()();
   DateTimeColumn get dateEdit => dateTime()();
 

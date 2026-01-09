@@ -1,47 +1,29 @@
-// ignore_for_file: no_default_cases
+import 'package:sputnikn_chat_client/model/chat_error.dart';
 
-import 'package:sputnikn_chat_client/generated/chat_message.pb.dart' as proto;
-
-abstract class BaseResponse {
-  const BaseResponse();
-}
-
-enum ApiResponseError {
-  apiResponseErrorNone,
-  apiResponseErrorInternalError,
-  apiResponseErrorUserNeedAuth,
-  apiResponseErrorUserWrongPassword,
-  apiResponseErrorUserNotFound,
-  apiResponseErrorRoomRequiredMinMembers,
-}
-
-ApiResponseError apiResponseErrorFromProto(proto.ResponseErrorType data) {
-  switch (data) {
-    case proto.ResponseErrorType.responseErrorTypeNone:
-      return ApiResponseError.apiResponseErrorNone;
-    case proto.ResponseErrorType.responseErrorTypeInternalError:
-      return ApiResponseError.apiResponseErrorInternalError;
-    case proto.ResponseErrorType.responseErrorTypeUserNeedAuth:
-      return ApiResponseError.apiResponseErrorUserNeedAuth;
-    case proto.ResponseErrorType.responseErrorTypeUserNotFound:
-      return ApiResponseError.apiResponseErrorUserNotFound;
-    case proto.ResponseErrorType.responseErrorTypeUserWrongPassword:
-      return ApiResponseError.apiResponseErrorUserWrongPassword;
-    case proto.ResponseErrorType.responseErrorTypeRoomRequiredMinMembers:
-      return ApiResponseError.apiResponseErrorRoomRequiredMinMembers;
-    default:
-      return ApiResponseError.apiResponseErrorNone;
-  }
-}
-
-class QueueResponse extends BaseResponse {
+class QueueResponse {
   const QueueResponse(
     this.responseId,
     this.error,
     this.data,
   );
 
+  factory QueueResponse.success(int responseId, Object data) {
+    return QueueResponse(
+      responseId,
+      null,
+      data,
+    );
+  }
+
+  factory QueueResponse.failure(int responseId, ChatError error) {
+    return QueueResponse(
+      responseId,
+      error,
+      null,
+    );
+  }
+
   final int responseId;
-  final ApiResponseError error;
-  final BaseResponse? data;
+  final ChatError? error;
+  final Object? data;
 }

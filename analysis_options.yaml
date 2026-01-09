@@ -1,11 +1,23 @@
-include: package:very_good_analysis/analysis_options.5.0.0.yaml
+include: package:very_good_analysis/analysis_options.yaml
 
 analyzer:
   exclude:
     - lib/**/*.g.dart
     - lib/**.g.dart
 
+formatter:
+  page_width: 120
+
 linter:
   rules:
     public_member_api_docs: false
     sort_pub_dependencies: false
+    cascade_invocations: false
+    lines_longer_than_80_chars: false
+    one_member_abstracts: false
+    document_ignores: false
+    avoid_catches_without_on_clauses: false
+    directives_ordering: false
+    curly_braces_in_flow_control_structures: true
+    comment_references: false
+    avoid_positional_boolean_parameters: false

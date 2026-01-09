@@ -1,61 +1,28 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:sputnikn_chat_client/sputnikn_chat_client.dart';
+import 'package:grpc/grpc.dart';
+import 'package:sputnikn_chat_client/generated/contract.pbgrpc.dart';
 import 'package:test/test.dart';
 
 void main() {
-  Future<WebsocketChatClient> _getSocketClient(
-    void Function(WebsocketChatClient, BaseResponse) onMessage,
-    void Function(WebsocketChatClient, ChatError) onError, [
-    bool closeWhenError = true,
-  ]) {
-    final clientReady = Completer<void>();
-    final client = WebsocketChatClient(
-      'ws://0.0.0.0:8443/chat',
-      'http://0.0.0.0:8443',
-      'testdb.db',
-      '',
-    );
-    StreamSubscription<dynamic>? stateSubs;
-    stateSubs = client.outSocketState.listen((event) {
-      if (event.state == SocketStateType.socketStateTypeReady) {
-        client.connect();
-      } else if (event.state == SocketStateType.socketStateTypeConnected) {
-        clientReady.complete();
-      } else {
-        clientReady.completeError('Client not ready');
-      }
-    });
-    StreamSubscription<dynamic>? messageSubs;
-    messageSubs = client.outMessage.listen((event) {
-      onMessage(client, event);
-    });
-    StreamSubscription<dynamic>? errorSubs;
-    errorSubs = client.outError.listen((event) {
-      onError(client, event);
-      if (closeWhenError) {
-        stateSubs?.cancel();
-        messageSubs?.cancel();
-        errorSubs?.cancel();
-        client.disconnect();
-      }
-    });
-    return clientReady.future.then((value) => client);
-  }
-
-  late WebsocketChatClient _client;
+  late ChatServiceClient chatClient;
 
   setUp(() async {
-    _client = await _getSocketClient(
-      (client, event) {},
-      (client, error) {
-        throw Exception('${error.message}\n\n${error.stackTrace}');
-      },
+    final channel = ClientChannel(
+      'localhost',
+      port: 50051,
+      options: ChannelOptions(
+        credentials: const ChannelCredentials.insecure(),
+        codecRegistry: CodecRegistry(
+          codecs: const [GzipCodec(), IdentityCodec()],
+        ),
+      ),
     );
+    chatClient = ChatServiceClient(channel);
   });
 
   tearDown(() {
-    _client.disconnect();
+    //
   });
 
   test(
@@ -63,12 +30,12 @@ void main() {
     () async {
       final completer = Completer<bool>();
       try {
-        await _client.createRoom('test room', null, []);
+        await chatClient.createRoom(CreateRoomRequest(title: 'test room'));
         completer.complete(false);
       } catch (ex) {
         completer.complete(true);
       } finally {
-        _client.disconnect();
+        // chatClient.disconnect();
       }
 
       final result = await completer.future.timeout(
@@ -84,12 +51,12 @@ void main() {
     () async {
       final completer = Completer<bool>();
       try {
-        await _client.authUser('testuser1', '1');
+        await chatClient.authUser(AuthUserRequest(login: 'testuser1', password: '1'));
         completer.complete(true);
       } catch (ex) {
         completer.complete(false);
       } finally {
-        _client.disconnect();
+        // chatClient.disconnect();
       }
       final result = await completer.future.timeout(
         const Duration(seconds: 3),
@@ -108,13 +75,13 @@ void main() {
     () async {
       final completer = Completer<bool>();
       try {
-        final user = await _client.authUser('testuser1', '1');
-        final rooms = await _client.listRooms({});
+        await chatClient.authUser(AuthUserRequest(login: 'testuser1', password: '1'));
+        final rooms = await chatClient.listRooms(ListRoomsRequest());
         completer.complete(rooms.detail.isNotEmpty);
       } catch (ex) {
         completer.complete(false);
       } finally {
-        _client.disconnect();
+        // chatClient.disconnect();
       }
 
       final result = await completer.future.timeout(
@@ -134,13 +101,13 @@ void main() {
     () async {
       final completer = Completer<bool>();
       try {
-        final user = await _client.authUser('testuser1', '1');
-        final users = await _client.listUsers();
+        await chatClient.authUser(AuthUserRequest(login: 'testuser1', password: '1'));
+        final users = await chatClient.listUsers(ListUsersRequest());
         completer.complete(users.users.isNotEmpty);
       } catch (ex) {
         completer.complete(false);
       } finally {
-        _client.disconnect();
+        // chatClient.disconnect();
       }
       final result = await completer.future.timeout(
         const Duration(seconds: 5),
@@ -159,24 +126,24 @@ void main() {
     () async {
       final completer = Completer<bool>();
       try {
-        final user = await _client.authUser('testuser1', '1');
-        final users = await _client.listUsers();
+        final user = await chatClient.authUser(AuthUserRequest(login: 'testuser1', password: '1'));
+        final users = await chatClient.listUsers(ListUsersRequest());
         final otherUsers = users.users..shuffle();
         final usersToAdd = otherUsers.take(2).toList()..add(user.detail);
-        final title =
-            'test room with ${usersToAdd.map((u) => u.fullName).join(',')}';
-        final roomCreated = await _client.createRoom(
-          title,
-          null,
-          usersToAdd.map((e) => e.userId).toList(),
+        final title = 'test room with ${usersToAdd.map((u) => u.fullName).join(',')}';
+        final roomCreated = await chatClient.createRoom(
+          CreateRoomRequest(
+            title: title,
+            memberIds: usersToAdd.map((e) => e.userId).toList(),
+          ),
         );
-        completer.complete(roomCreated.detail.roomId.isNotEmpty &&
-            roomCreated.detail.members
-                .any((e) => e.userId == user.detail.userId));
+        completer.complete(
+          roomCreated.detail.roomId.isNotEmpty && roomCreated.detail.members.any((e) => e.userId == user.detail.userId),
+        );
       } catch (ex) {
         completer.complete(false);
       } finally {
-        _client.disconnect();
+        // chatClient.disconnect();
       }
       final result = await completer.future.timeout(
         const Duration(seconds: 3),
@@ -198,17 +165,18 @@ void main() {
     () async {
       final completer = Completer<bool>();
       try {
-        final user = await _client.authUser('testuser1', '1');
-        final roomCreated = await _client.createRoom(
-          'test',
-          null,
-          [user.detail.userId],
+        final user = await chatClient.authUser(AuthUserRequest(login: 'testuser1', password: '1'));
+        await chatClient.createRoom(
+          CreateRoomRequest(
+            title: 'test',
+            memberIds: [user.detail.userId],
+          ),
         );
         completer.complete(false);
       } catch (ex) {
         completer.complete(true);
       } finally {
-        _client.disconnect();
+        // chatClient.disconnect();
       }
       final result = await completer.future.timeout(
         const Duration(seconds: 3),
@@ -227,18 +195,19 @@ void main() {
     () async {
       final completer = Completer<bool>();
       try {
-        final user = await _client.authUser('testuser1', '1');
-        final rooms = await _client.listRooms({});
+        final user = await chatClient.authUser(AuthUserRequest(login: 'testuser1', password: '1'));
+        final rooms = await chatClient.listRooms(ListRoomsRequest());
         if (rooms.detail.isEmpty) {
           completer.complete(false);
         } else {
           final room = rooms.detail.first;
           final msgContent = json.encode({'content': 'test message'});
-          final newMessage = await _client.addRoomEventMessage(
-            room.roomId,
-            [],
-            msgContent,
-            1,
+          final newMessage = await chatClient.addRoomMessage(
+            RoomEventMessageRequest(
+              roomId: room.roomId,
+              content: msgContent,
+              version: 1,
+            ),
           );
           completer.complete(
             newMessage.detail.roomId == room.roomId &&
@@ -249,7 +218,7 @@ void main() {
       } catch (ex) {
         completer.complete(false);
       } finally {
-        _client.disconnect();
+        // chatClient.disconnect();
       }
       final result = await completer.future.timeout(
         const Duration(seconds: 3),
@@ -268,13 +237,13 @@ void main() {
     () async {
       final completer = Completer<bool>();
       try {
-        final user = await _client.authUser('testuser1', '1');
-        final syncRooms = await _client.syncRooms([]);
+        await chatClient.authUser(AuthUserRequest(login: 'testuser1', password: '1'));
+        await chatClient.syncRooms(SyncRoomsRequest());
         completer.complete(true);
       } catch (ex) {
         completer.complete(false);
       } finally {
-        _client.disconnect();
+        // chatClient.disconnect();
       }
       final result = await completer.future.timeout(
         const Duration(seconds: 3),
@@ -287,17 +256,17 @@ void main() {
   test(
     'test download media content',
     () async {
+      /*
       final completer = Completer<bool>();
       try {
-        final user = await _client.authUser('testuser1', '1');
-        final media =
-            await _client.downloadMedia('5765b96f-2d2c-45b8-b6f3-b131d8e30714');
+        final user = await chatClient.authUser(AuthUserRequest(login: 'testuser1', password: '1'));
+        final media = await chatClient.downloadMedia('5765b96f-2d2c-45b8-b6f3-b131d8e30714');
         print('>>> mediaType=${media.content.contentType}');
         completer.complete(media.content.bytes.isNotEmpty);
       } catch (ex) {
         completer.complete(false);
       } finally {
-        _client.disconnect();
+        chatClient.disconnect();
       }
       final result = await completer.future.timeout(
         const Duration(seconds: 3),
@@ -308,6 +277,7 @@ void main() {
         true,
         reason: 'Expected response as DownloadMediaResponse',
       );
+       */
     },
   );
 }

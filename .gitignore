@@ -72,6 +72,8 @@ build/
 !**/ios/**/default.mode2v3
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
-lib/generated/
 *.lock
 *.db
+
+# FVM Version Cache
+.fvm/
