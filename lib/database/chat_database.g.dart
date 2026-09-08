@@ -420,6 +420,17 @@ class $UserTable extends User with TableInfo<$UserTable, UserData> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _accessTokenMeta = const VerificationMeta(
+    'accessToken',
+  );
+  @override
+  late final GeneratedColumn<String> accessToken = GeneratedColumn<String>(
+    'access_token',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _dateCreateMeta = const VerificationMeta(
     'dateCreate',
   );
@@ -449,6 +460,7 @@ class $UserTable extends User with TableInfo<$UserTable, UserData> {
     password,
     fullName,
     avatar,
+    accessToken,
     dateCreate,
     dateUpdate,
   ];
@@ -495,6 +507,15 @@ class $UserTable extends User with TableInfo<$UserTable, UserData> {
         avatar.isAcceptableOrUnknown(data['avatar']!, _avatarMeta),
       );
     }
+    if (data.containsKey('access_token')) {
+      context.handle(
+        _accessTokenMeta,
+        accessToken.isAcceptableOrUnknown(
+          data['access_token']!,
+          _accessTokenMeta,
+        ),
+      );
+    }
     if (data.containsKey('date_create')) {
       context.handle(
         _dateCreateMeta,
@@ -538,6 +559,10 @@ class $UserTable extends User with TableInfo<$UserTable, UserData> {
         DriftSqlType.string,
         data['${effectivePrefix}avatar'],
       ),
+      accessToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}access_token'],
+      ),
       dateCreate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}date_create'],
@@ -561,6 +586,7 @@ class UserData extends DataClass implements Insertable<UserData> {
   final String? password;
   final String fullName;
   final String? avatar;
+  final String? accessToken;
   final DateTime dateCreate;
   final DateTime? dateUpdate;
   const UserData({
@@ -569,6 +595,7 @@ class UserData extends DataClass implements Insertable<UserData> {
     this.password,
     required this.fullName,
     this.avatar,
+    this.accessToken,
     required this.dateCreate,
     this.dateUpdate,
   });
@@ -585,6 +612,9 @@ class UserData extends DataClass implements Insertable<UserData> {
     map['full_name'] = Variable<String>(fullName);
     if (!nullToAbsent || avatar != null) {
       map['avatar'] = Variable<String>(avatar);
+    }
+    if (!nullToAbsent || accessToken != null) {
+      map['access_token'] = Variable<String>(accessToken);
     }
     map['date_create'] = Variable<DateTime>(dateCreate);
     if (!nullToAbsent || dateUpdate != null) {
@@ -606,6 +636,9 @@ class UserData extends DataClass implements Insertable<UserData> {
       avatar: avatar == null && nullToAbsent
           ? const Value.absent()
           : Value(avatar),
+      accessToken: accessToken == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accessToken),
       dateCreate: Value(dateCreate),
       dateUpdate: dateUpdate == null && nullToAbsent
           ? const Value.absent()
@@ -624,6 +657,7 @@ class UserData extends DataClass implements Insertable<UserData> {
       password: serializer.fromJson<String?>(json['password']),
       fullName: serializer.fromJson<String>(json['fullName']),
       avatar: serializer.fromJson<String?>(json['avatar']),
+      accessToken: serializer.fromJson<String?>(json['accessToken']),
       dateCreate: serializer.fromJson<DateTime>(json['dateCreate']),
       dateUpdate: serializer.fromJson<DateTime?>(json['dateUpdate']),
     );
@@ -637,6 +671,7 @@ class UserData extends DataClass implements Insertable<UserData> {
       'password': serializer.toJson<String?>(password),
       'fullName': serializer.toJson<String>(fullName),
       'avatar': serializer.toJson<String?>(avatar),
+      'accessToken': serializer.toJson<String?>(accessToken),
       'dateCreate': serializer.toJson<DateTime>(dateCreate),
       'dateUpdate': serializer.toJson<DateTime?>(dateUpdate),
     };
@@ -648,6 +683,7 @@ class UserData extends DataClass implements Insertable<UserData> {
     Value<String?> password = const Value.absent(),
     String? fullName,
     Value<String?> avatar = const Value.absent(),
+    Value<String?> accessToken = const Value.absent(),
     DateTime? dateCreate,
     Value<DateTime?> dateUpdate = const Value.absent(),
   }) => UserData(
@@ -656,6 +692,7 @@ class UserData extends DataClass implements Insertable<UserData> {
     password: password.present ? password.value : this.password,
     fullName: fullName ?? this.fullName,
     avatar: avatar.present ? avatar.value : this.avatar,
+    accessToken: accessToken.present ? accessToken.value : this.accessToken,
     dateCreate: dateCreate ?? this.dateCreate,
     dateUpdate: dateUpdate.present ? dateUpdate.value : this.dateUpdate,
   );
@@ -666,6 +703,9 @@ class UserData extends DataClass implements Insertable<UserData> {
       password: data.password.present ? data.password.value : this.password,
       fullName: data.fullName.present ? data.fullName.value : this.fullName,
       avatar: data.avatar.present ? data.avatar.value : this.avatar,
+      accessToken: data.accessToken.present
+          ? data.accessToken.value
+          : this.accessToken,
       dateCreate: data.dateCreate.present
           ? data.dateCreate.value
           : this.dateCreate,
@@ -683,6 +723,7 @@ class UserData extends DataClass implements Insertable<UserData> {
           ..write('password: $password, ')
           ..write('fullName: $fullName, ')
           ..write('avatar: $avatar, ')
+          ..write('accessToken: $accessToken, ')
           ..write('dateCreate: $dateCreate, ')
           ..write('dateUpdate: $dateUpdate')
           ..write(')'))
@@ -696,6 +737,7 @@ class UserData extends DataClass implements Insertable<UserData> {
     password,
     fullName,
     avatar,
+    accessToken,
     dateCreate,
     dateUpdate,
   );
@@ -708,6 +750,7 @@ class UserData extends DataClass implements Insertable<UserData> {
           other.password == this.password &&
           other.fullName == this.fullName &&
           other.avatar == this.avatar &&
+          other.accessToken == this.accessToken &&
           other.dateCreate == this.dateCreate &&
           other.dateUpdate == this.dateUpdate);
 }
@@ -718,6 +761,7 @@ class UserCompanion extends UpdateCompanion<UserData> {
   final Value<String?> password;
   final Value<String> fullName;
   final Value<String?> avatar;
+  final Value<String?> accessToken;
   final Value<DateTime> dateCreate;
   final Value<DateTime?> dateUpdate;
   final Value<int> rowid;
@@ -727,6 +771,7 @@ class UserCompanion extends UpdateCompanion<UserData> {
     this.password = const Value.absent(),
     this.fullName = const Value.absent(),
     this.avatar = const Value.absent(),
+    this.accessToken = const Value.absent(),
     this.dateCreate = const Value.absent(),
     this.dateUpdate = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -737,6 +782,7 @@ class UserCompanion extends UpdateCompanion<UserData> {
     this.password = const Value.absent(),
     required String fullName,
     this.avatar = const Value.absent(),
+    this.accessToken = const Value.absent(),
     required DateTime dateCreate,
     this.dateUpdate = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -749,6 +795,7 @@ class UserCompanion extends UpdateCompanion<UserData> {
     Expression<String>? password,
     Expression<String>? fullName,
     Expression<String>? avatar,
+    Expression<String>? accessToken,
     Expression<DateTime>? dateCreate,
     Expression<DateTime>? dateUpdate,
     Expression<int>? rowid,
@@ -759,6 +806,7 @@ class UserCompanion extends UpdateCompanion<UserData> {
       if (password != null) 'password': password,
       if (fullName != null) 'full_name': fullName,
       if (avatar != null) 'avatar': avatar,
+      if (accessToken != null) 'access_token': accessToken,
       if (dateCreate != null) 'date_create': dateCreate,
       if (dateUpdate != null) 'date_update': dateUpdate,
       if (rowid != null) 'rowid': rowid,
@@ -771,6 +819,7 @@ class UserCompanion extends UpdateCompanion<UserData> {
     Value<String?>? password,
     Value<String>? fullName,
     Value<String?>? avatar,
+    Value<String?>? accessToken,
     Value<DateTime>? dateCreate,
     Value<DateTime?>? dateUpdate,
     Value<int>? rowid,
@@ -781,6 +830,7 @@ class UserCompanion extends UpdateCompanion<UserData> {
       password: password ?? this.password,
       fullName: fullName ?? this.fullName,
       avatar: avatar ?? this.avatar,
+      accessToken: accessToken ?? this.accessToken,
       dateCreate: dateCreate ?? this.dateCreate,
       dateUpdate: dateUpdate ?? this.dateUpdate,
       rowid: rowid ?? this.rowid,
@@ -805,6 +855,9 @@ class UserCompanion extends UpdateCompanion<UserData> {
     if (avatar.present) {
       map['avatar'] = Variable<String>(avatar.value);
     }
+    if (accessToken.present) {
+      map['access_token'] = Variable<String>(accessToken.value);
+    }
     if (dateCreate.present) {
       map['date_create'] = Variable<DateTime>(dateCreate.value);
     }
@@ -825,6 +878,7 @@ class UserCompanion extends UpdateCompanion<UserData> {
           ..write('password: $password, ')
           ..write('fullName: $fullName, ')
           ..write('avatar: $avatar, ')
+          ..write('accessToken: $accessToken, ')
           ..write('dateCreate: $dateCreate, ')
           ..write('dateUpdate: $dateUpdate, ')
           ..write('rowid: $rowid')
@@ -3700,6 +3754,7 @@ typedef $$UserTableCreateCompanionBuilder =
       Value<String?> password,
       required String fullName,
       Value<String?> avatar,
+      Value<String?> accessToken,
       required DateTime dateCreate,
       Value<DateTime?> dateUpdate,
       Value<int> rowid,
@@ -3711,6 +3766,7 @@ typedef $$UserTableUpdateCompanionBuilder =
       Value<String?> password,
       Value<String> fullName,
       Value<String?> avatar,
+      Value<String?> accessToken,
       Value<DateTime> dateCreate,
       Value<DateTime?> dateUpdate,
       Value<int> rowid,
@@ -3836,6 +3892,11 @@ class $$UserTableFilterComposer extends Composer<_$ChatDatabase, $UserTable> {
 
   ColumnFilters<String> get avatar => $composableBuilder(
     column: $table.avatar,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accessToken => $composableBuilder(
+    column: $table.accessToken,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3985,6 +4046,11 @@ class $$UserTableOrderingComposer extends Composer<_$ChatDatabase, $UserTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get accessToken => $composableBuilder(
+    column: $table.accessToken,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get dateCreate => $composableBuilder(
     column: $table.dateCreate,
     builder: (column) => ColumnOrderings(column),
@@ -4019,6 +4085,11 @@ class $$UserTableAnnotationComposer
 
   GeneratedColumn<String> get avatar =>
       $composableBuilder(column: $table.avatar, builder: (column) => column);
+
+  GeneratedColumn<String> get accessToken => $composableBuilder(
+    column: $table.accessToken,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get dateCreate => $composableBuilder(
     column: $table.dateCreate,
@@ -4171,6 +4242,7 @@ class $$UserTableTableManager
                 Value<String?> password = const Value.absent(),
                 Value<String> fullName = const Value.absent(),
                 Value<String?> avatar = const Value.absent(),
+                Value<String?> accessToken = const Value.absent(),
                 Value<DateTime> dateCreate = const Value.absent(),
                 Value<DateTime?> dateUpdate = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4180,6 +4252,7 @@ class $$UserTableTableManager
                 password: password,
                 fullName: fullName,
                 avatar: avatar,
+                accessToken: accessToken,
                 dateCreate: dateCreate,
                 dateUpdate: dateUpdate,
                 rowid: rowid,
@@ -4191,6 +4264,7 @@ class $$UserTableTableManager
                 Value<String?> password = const Value.absent(),
                 required String fullName,
                 Value<String?> avatar = const Value.absent(),
+                Value<String?> accessToken = const Value.absent(),
                 required DateTime dateCreate,
                 Value<DateTime?> dateUpdate = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4200,6 +4274,7 @@ class $$UserTableTableManager
                 password: password,
                 fullName: fullName,
                 avatar: avatar,
+                accessToken: accessToken,
                 dateCreate: dateCreate,
                 dateUpdate: dateUpdate,
                 rowid: rowid,

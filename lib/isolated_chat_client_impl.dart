@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:dio/dio.dart';
-import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:grpc/grpc.dart';
 import 'package:http/http.dart' as http;
@@ -58,7 +57,7 @@ class IsolatedChatClientImpl {
         ),
       ),
     );
-    _chatClient = ChatServiceClient(channel);
+    _chatService = ChatServiceClient(channel);
   }
 
   final SendPort remoteSendPort;
@@ -69,8 +68,9 @@ class IsolatedChatClientImpl {
   final _uuid = const Uuid();
   late ChatDatabase _database;
   late ApiClient _mediaService;
-  late ChatServiceClient _chatClient;
+  late ChatServiceClient _chatService;
   final _defaultMimeType = 'application/octet-stream';
+  UserData? _userSession;
 
   static void create(IsolatedChatClientArgs args) {
     final receivePort = ReceivePort();
@@ -140,47 +140,82 @@ class IsolatedChatClientImpl {
     await _storeRequestToDatabase(request.data);
     GeneratedMessage? response;
     if (request.data is AuthUserRequest) {
-      response = await _chatClient.authUser(request.data as AuthUserRequest);
+      final requestData = request.data as AuthUserRequest;
+      if (request.isOffline) {
+        // find user at local database and set session
+      } else {
+        response = await _chatService.authUser(requestData);
+        if (response is AuthUserResponse) {
+          if (response.error == AuthErrorType.AuthErrorTypeNone && response.hasAccessToken() && response.hasDetail()) {
+            _userSession = await _database.storeAuthUser(
+              requestData.login,
+              requestData.password,
+              response.accessToken,
+              response.detail,
+            );
+          }
+        }
+      }
     }
     if (request.data is ListUsersRequest) {
+      if (_userSession == null) return;
       final data = request.data as ListUsersRequest;
       if (request.isOffline) {
         //
       } else {
-        response = await _chatClient.listUsers(data);
+        response = await _chatService.listUsers(
+          data,
+          options: _buildCallOptions(),
+        );
       }
     }
     if (request.data is ListRoomsRequest) {
+      if (_userSession == null) return;
       final data = request.data as ListRoomsRequest;
       if (request.isOffline) {
-        final rooms = await _database.getUserRoomsAsRoomDetail(data.userId, data.roomIds.toSet());
+        final rooms = await _database.getUserRoomsAsRoomDetail(_userSession!.id, data.roomIds.toSet());
         remoteSendPort.send(QueueResponse.success(request.queueId, ListRoomsResponse(detail: rooms)));
       } else {
-        response = await _chatClient.listRooms(data);
+        response = await _chatService.listRooms(
+          data,
+          options: _buildCallOptions(),
+        );
       }
     }
     if (request.data is SyncRoomsRequest) {
+      if (_userSession == null) return;
       final data = request.data as SyncRoomsRequest;
       if (request.isOffline) {
         //
       } else {
-        response = await _chatClient.syncRooms(data);
+        response = await _chatService.syncRooms(
+          data,
+          options: _buildCallOptions(),
+        );
       }
     }
     if (request.data is RoomReadMarkerRequest) {
+      if (_userSession == null) return;
       final data = request.data as RoomReadMarkerRequest;
       if (request.isOffline) {
         //
       } else {
-        response = await _chatClient.setRoomReadMarker(data);
+        response = await _chatService.setRoomReadMarker(
+          data,
+          options: _buildCallOptions(),
+        );
       }
     }
     if (request.data is CreateRoomRequest) {
+      if (_userSession == null) return;
       final data = request.data as CreateRoomRequest;
       if (request.isOffline) {
         //
       } else {
-        response = await _chatClient.createRoom(data);
+        response = await _chatService.createRoom(
+          data,
+          options: _buildCallOptions(),
+        );
       }
     }
     if (request.data is InviteRoomMemberRequest) {
@@ -188,7 +223,10 @@ class IsolatedChatClientImpl {
       if (request.isOffline) {
         //
       } else {
-        response = await _chatClient.inviteRoomMember(data);
+        response = await _chatService.inviteRoomMember(
+          data,
+          options: _buildCallOptions(),
+        );
       }
     }
     if (request.data is RemoveRoomMemberRequest) {
@@ -196,10 +234,14 @@ class IsolatedChatClientImpl {
       if (request.isOffline) {
         //
       } else {
-        response = await _chatClient.removeRoomMember(data);
+        response = await _chatService.removeRoomMember(
+          data,
+          options: _buildCallOptions(),
+        );
       }
     }
     if (request.data is RoomEventMessageRequest) {
+      if (_userSession == null) return;
       final data = request.data as RoomEventMessageRequest;
       if (request.isOffline) {
         final dateCreation = DateTime.now();
@@ -207,14 +249,14 @@ class IsolatedChatClientImpl {
           RoomEventMessageData(
             id: _uuid.v4(),
             roomId: data.roomId,
-            userId: data.userId,
+            userId: _userSession!.id,
             content: data.content,
             version: data.version,
             dateCreate: dateCreation,
             dateEdit: dateCreation,
           ),
         );
-        // TODO(alexsh): what should we do with attachments?
+        // TODO(alexb): what should we do with attachments?
         remoteSendPort.send(
           QueueResponse.success(
             request.queueId,
@@ -222,7 +264,7 @@ class IsolatedChatClientImpl {
               detail: RoomEventMessageDetail(
                 eventId: _uuid.v4(),
                 roomId: data.roomId,
-                senderId: data.userId,
+                senderId: _userSession!.id,
                 version: data.version,
                 attachment: [],
                 reaction: [],
@@ -234,15 +276,22 @@ class IsolatedChatClientImpl {
           ),
         );
       } else {
-        response = await _chatClient.addRoomMessage(data);
+        response = await _chatService.addRoomMessage(
+          data,
+          options: _buildCallOptions(),
+        );
       }
     }
     if (request.data is RoomEventMessageReactionRequest) {
+      if (_userSession == null) return;
       final data = request.data as RoomEventMessageReactionRequest;
       if (request.isOffline) {
         //
       } else {
-        response = await _chatClient.addRoomMessageReaction(data);
+        response = await _chatService.addRoomMessageReaction(
+          data,
+          options: _buildCallOptions(),
+        );
       }
     }
     if (response != null) {
@@ -256,12 +305,22 @@ class IsolatedChatClientImpl {
     await _database.close();
   }
 
+  CallOptions? _buildCallOptions() {
+    if (_userSession == null || true == _userSession?.accessToken?.isEmpty) {
+      return null;
+    }
+    return CallOptions(
+      metadata: {'authorization': 'Bearer ${_userSession!.accessToken}'},
+    );
+  }
+
   Future<Object> _storeRequestToDatabase(Object request) async {
     if (request is RoomEventMessageRequest) {
+      if (_userSession == null) throw Exception('User not authorized.');
       await _database.upsertEventMessage(
         RoomEventMessageData(
           id: _uuid.v4(),
-          userId: request.userId,
+          userId: _userSession!.id,
           roomId: request.roomId,
           content: request.content,
           version: request.version,

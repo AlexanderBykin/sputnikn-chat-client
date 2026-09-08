@@ -1302,14 +1302,12 @@ class SyncRoomsResponse extends $pb.GeneratedMessage {
 class RoomEventMessageRequest extends $pb.GeneratedMessage {
   factory RoomEventMessageRequest({
     $core.String? roomId,
-    $core.int? clientEventId,
     $core.Iterable<$core.String>? attachment,
     $core.String? content,
     $core.int? version,
   }) {
     final result = create();
     if (roomId != null) result.roomId = roomId;
-    if (clientEventId != null) result.clientEventId = clientEventId;
     if (attachment != null) result.attachment.addAll(attachment);
     if (content != null) result.content = content;
     if (version != null) result.version = version;
@@ -1331,10 +1329,9 @@ class RoomEventMessageRequest extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'ru.sputnikn.api.contract.v1'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'roomId', protoName: 'roomId')
-    ..aI(2, _omitFieldNames ? '' : 'clientEventId', protoName: 'clientEventId')
-    ..pPS(3, _omitFieldNames ? '' : 'attachment')
-    ..aOS(4, _omitFieldNames ? '' : 'content')
-    ..aI(5, _omitFieldNames ? '' : 'version')
+    ..pPS(2, _omitFieldNames ? '' : 'attachment')
+    ..aOS(3, _omitFieldNames ? '' : 'content')
+    ..aI(4, _omitFieldNames ? '' : 'version')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1367,34 +1364,25 @@ class RoomEventMessageRequest extends $pb.GeneratedMessage {
   void clearRoomId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.int get clientEventId => $_getIZ(1);
-  @$pb.TagNumber(2)
-  set clientEventId($core.int value) => $_setSignedInt32(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasClientEventId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearClientEventId() => $_clearField(2);
+  $pb.PbList<$core.String> get attachment => $_getList(1);
 
   @$pb.TagNumber(3)
-  $pb.PbList<$core.String> get attachment => $_getList(2);
+  $core.String get content => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set content($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasContent() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearContent() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get content => $_getSZ(3);
+  $core.int get version => $_getIZ(3);
   @$pb.TagNumber(4)
-  set content($core.String value) => $_setString(3, value);
+  set version($core.int value) => $_setSignedInt32(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasContent() => $_has(3);
+  $core.bool hasVersion() => $_has(3);
   @$pb.TagNumber(4)
-  void clearContent() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $core.int get version => $_getIZ(4);
-  @$pb.TagNumber(5)
-  set version($core.int value) => $_setSignedInt32(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasVersion() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearVersion() => $_clearField(5);
+  void clearVersion() => $_clearField(4);
 }
 
 class RoomEventMessageResponse extends $pb.GeneratedMessage {

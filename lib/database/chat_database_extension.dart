@@ -48,6 +48,21 @@ extension ChatDatabaseExtension on ChatDatabase {
     await upsertRoomMembers(roomMembersData);
   }
 
+  Future<UserData> storeAuthUser(String login, String password, String accessToken, UserDetail detail) async {
+    final userData = UserData(
+      id: detail.userId,
+      login: login,
+      password: password,
+      fullName: detail.fullName,
+      avatar: detail.avatar,
+      accessToken: accessToken,
+      dateCreate: DateTime.now(),
+      dateUpdate: DateTime.now(),
+    );
+    await upsertUser(userData);
+    return userData;
+  }
+
   Future<void> storeUsers(List<UserDetail> details) async {
     final usersData = details.map((user) {
       return UserData(
