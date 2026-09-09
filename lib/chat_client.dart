@@ -77,8 +77,7 @@ class ChatClient {
           }
         }
       }
-    }
-    if (message is ChatError) {
+    } else if (message is ChatError) {
       _errorSubject.sink.add(message);
     } else {
       _errorSubject.sink.add(

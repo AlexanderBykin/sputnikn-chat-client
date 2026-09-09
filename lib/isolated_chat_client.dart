@@ -53,6 +53,8 @@ class IsolatedChatClient {
       port: chatServerPort,
       options: ChannelOptions(
         credentials: const ChannelCredentials.insecure(),
+        connectTimeout: const Duration(milliseconds: 2990),
+        connectionTimeout: const Duration(milliseconds: 2990),
         codecRegistry: CodecRegistry(
           codecs: const [GzipCodec(), IdentityCodec()],
         ),
@@ -151,16 +153,27 @@ class IsolatedChatClient {
       if (request.isOffline) {
         // find user at local database and set session
       } else {
-        response = await _chatService.authUser(requestData);
-        if (response is AuthUserResponse) {
-          if (response.error == AuthErrorType.AuthErrorTypeNone && response.hasAccessToken() && response.hasDetail()) {
-            _userSession = await _database.storeAuthUser(
-              requestData.login,
-              requestData.password,
-              response.accessToken,
-              response.detail,
-            );
+        try {
+          response = await _chatService.authUser(requestData);
+          if (response is AuthUserResponse) {
+            if (response.error == AuthErrorType.AuthErrorTypeNone &&
+                response.hasAccessToken() &&
+                response.hasDetail()) {
+              _userSession = await _database.storeAuthUser(
+                requestData.login,
+                requestData.password,
+                response.accessToken,
+                response.detail,
+              );
+            }
           }
+        } on Exception catch (e) {
+          remoteSendPort.send(
+            QueueResponse.failure(
+              request.queueId,
+              ChatError(e.toString(), StackTrace.current.toString()),
+            ),
+          );
         }
       }
     } else if (request.data is ListUsersRequest) {
