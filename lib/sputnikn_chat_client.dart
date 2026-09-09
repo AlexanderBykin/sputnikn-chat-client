@@ -7,3 +7,4 @@ export 'model/chat_error.dart';
 export 'model/media_content.dart';
 export 'model/request/request.dart';
 export 'model/response/response.dart';
+export 'chat_client.dart';
